@@ -1,9 +1,11 @@
-import gym
+import gymnasium as gym
 import numpy as np
 from gym import spaces
 import pygame
 import time
-import random
+import torch
+import torch.nn as nn
+import torch.optim as optim
 
 
 class LabyrinthEnv(gym.Env):
@@ -26,6 +28,8 @@ class LabyrinthEnv(gym.Env):
 
         # The observation space is a multi-discrete space representing the position of the agent
         self.observation_space = spaces.MultiDiscrete([self.size, self.size])
+        
+        self.countReward = 0
 
     def reset(self):
         # Reset the agent's position to the top-left corner
@@ -49,11 +53,13 @@ class LabyrinthEnv(gym.Env):
         # Check if the agent has reached the goal
         done = np.array_equal(self.agent_pos, self.goal_pos)
         if done:
-            reward = 1.0
+            self.countReward += 1000.0
+            reward = 1000.0
         else:
-            reward = 0.0
+            self.countReward -= 1.0
+            reward = -1.0
 
-        return self.agent_pos, reward, done, {}
+        return self.agent_pos, reward, self.countReward, done, {}
 
     def render(self, mode='human'):
         # Initialize pygame and the display
@@ -103,10 +109,10 @@ env = LabyrinthEnv()
 observation = env.reset()
 for i in range(1000):
     action = env.action_space.sample()
-    observation, reward, done, info = env.step(action)
+    observation, reward, countReward, done, info = env.step(action)
     env.render()
-    time.sleep(0.5)
-    print(i,"-",env.directionStr[action],"-",observation,"-",reward,"-",done, "-",info)
+    #time.sleep(0.1)
+    print(i,"-",env.directionStr[action],"-",observation,"-",reward,"-", countReward,"-",done, "-",info)
     if(done):
         break
 
