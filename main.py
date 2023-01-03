@@ -12,23 +12,24 @@ class LabyrinthEnv(gym.Env):
         self.size = 10
 
         # The agent starts at the top-left corner of the labyrinth
-        self.agent_pos = [0, 0]
+        self.agent_pos = [0, self.size-1]
         # The agent starts at a random position in the labyrinth
         #random.seed()
         #self.agent_pos = [random.randint(0,9), random.randint(0,9)]
 
         # The goal is at the bottom-right corner of the labyrinth
-        self.goal_pos = [self.size-1, self.size-1]
+        self.goal_pos = [self.size-1, 0]
 
         # The action space is a discrete space with 4 actions (up, down, left, right)
         self.action_space = spaces.Discrete(4)
+        self.directionStr = ("up", "down", "left", "right")
 
         # The observation space is a multi-discrete space representing the position of the agent
         self.observation_space = spaces.MultiDiscrete([self.size, self.size])
 
     def reset(self):
         # Reset the agent's position to the top-left corner
-        self.agent_pos = [0, 0]
+        self.agent_pos = [0, self.size-1]
         # Reset the agent's position to a random position
         #random.seed()
         #self.agent_pos = [random.randint(0,9), random.randint(0,9)]
@@ -80,16 +81,10 @@ class LabyrinthEnv(gym.Env):
         goal_x, goal_y = self.goal_pos
         goal_x, goal_y = goal_x*size_format+size_format/2, goal_y*size_format+size_format/2
         
-        if((agent_x == 0 and agent_y == 0)):
-            screen.blit(player, (agent_x,agent_y))
-            pygame.draw.rect(screen,(255,0,0),(720,720,80,80))
-        elif((agent_x == 9 and agent_y == 9)):
-            screen.blit(player, (agent_x,agent_y))
-            pygame.draw.rect(screen,(0,255,0),(0,0,80,80))
-        else:
-            screen.blit(player, (agent_x,agent_y))
-            pygame.draw.rect(screen,(0,255,0),(0,0,80,80))
-            pygame.draw.rect(screen,(255,0,0),(720,720,80,80))
+        #Values of the rendered rectangles must be changed if the starting and finishing points are changed
+        pygame.draw.rect(screen,(0,255,0),(0,720,80,80))
+        pygame.draw.rect(screen,(255,0,0),(720,0,80,80))
+        screen.blit(player, (agent_x,agent_y))
         # Update the display
         pygame.display.update()
 
@@ -110,8 +105,8 @@ for i in range(1000):
     action = env.action_space.sample()
     observation, reward, done, info = env.step(action)
     env.render()
-    #time.sleep(0.5)
-    print(i,"-",action,"-",observation,"-",reward,"-",done, "-",info)
+    time.sleep(0.5)
+    print(i,"-",env.directionStr[action],"-",observation,"-",reward,"-",done, "-",info)
     if(done):
         break
 
