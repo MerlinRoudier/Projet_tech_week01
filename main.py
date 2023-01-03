@@ -112,7 +112,7 @@ for i in range(1000):
     observation, reward, countReward, done, info = env.step(action)
     env.render()
     #time.sleep(0.1)
-    print(i,"-",env.directionStr[action],"-",observation,"-",reward,"-", countReward,"-",done, "-",info)
+    print(i,"|",env.directionStr[action],"|",observation,"|",reward,"|", countReward,"|",done, "|",info)
     if(done):
         break
 
