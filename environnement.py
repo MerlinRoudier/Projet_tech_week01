@@ -5,7 +5,7 @@ import time
 import torch
 import torch.nn as nn
 import torch.optim as optim
-from agent import Agent
+from agent import basicAgent, randomAgent, RLAgent
 
 
 class Environ(gymnasium.Env):
@@ -14,8 +14,17 @@ class Environ(gymnasium.Env):
         pygame.init()        
         # The size of the labyrinth is 10x10
         self.size = 10
-        # Matrix representing the environment
-        self.matrix = torch.zeros(10,10)
+        # Matrix representing the environment and its rewards
+        self.matrix = torch.tensor([[-1,-1,-1,-1,-1,-1,-1,-1,-1,1000],
+                                    [-1,-1,-1,-1,-1,-1,-1,-1,-1,-1],
+                                    [-1,-1,-1,-1,-1,-1,-1,-1,-1,-1],
+                                    [-1,-1,-1,-1,-1,-1,-1,-1,-1,-1],
+                                    [-1,-1,-1,-1,-1,-1,-1,-1,-1,-1],
+                                    [-1,-1,-1,-1,-1,-1,-1,-1,-1,-1],
+                                    [-1,-1,-1,-1,-1,-1,-1,-1,-1,-1],
+                                    [-1,-1,-1,-1,-1,-1,-1,-1,-1,-1],
+                                    [-1,-1,-1,-1,-1,-1,-1,-1,-1,-1],
+                                    [-1,-1,-1,-1,-1,-1,-1,-1,-1,-1]])
         #Initialize the agent arrays
         
         #The goal is at the top-right corner of the labyrinth
@@ -25,7 +34,7 @@ class Environ(gymnasium.Env):
         self.starting_pos = [0, self.size-1]
 
         #The agent starts at the bottom-left corner of the labyrinth
-        self.arrayAgent = [Agent(self.starting_pos[0], self.starting_pos[1], "basic")]
+        self.arrayAgent = [RLAgent(self.starting_pos[0], self.starting_pos[1], self.matrix)]
 
         # The action space is a discrete space with 4 actions (up, down, left, right)
         self.action_space = spaces.Discrete(4)
@@ -51,9 +60,9 @@ class Environ(gymnasium.Env):
         # Check if the agents have reached the goals
         for a in self.arrayAgent:
             if torch.equal(a.pos, self.goal_pos):
-                a.score+=1000.0
+                a.score+=1000
             else:
-                a.score-=1.0
+                a.score-=1
 
     def render(self, numberAgent):
         

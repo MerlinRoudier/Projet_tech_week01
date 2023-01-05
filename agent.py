@@ -6,47 +6,92 @@ import torch.optim as optim
 
 
 class Agent:
-    def __init__(self, x, y, behaviour):
+    def __init__(self, x, y):
         self.pos = torch.tensor([x,y])
         self.image = pygame.image.load("robot.jpg")
         self.score = 0
-        self.comportement = behaviour
-        #self.neural_network =
+        self.strAction = ["up", "down", "left", "right"]
+        
+    def is_valid(self,matrice,pos):
+        return 0 <= pos[0] < matrice.size()[0] and 0 <= pos[1] < matrice.size()[1]    
 
-    def basic_moves(self):
+
+class basicAgent(Agent):
+    def __init__(self, x, y):
+        super().__init__(x, y)
+    
+    def move(self, matrice):
         if self.pos[1] == 0:
             self.pos[0]+=1
         else:
             self.pos[1]-=1
-    def is_valid(self,matrice):
-        return min()
-
-    def random_moves(self):
-        x,y=self.pos
-        r={e for e in [(x+1,y),(x-1,y),(x,y+1),(x,y-1)] if self.is_valid(e)}.pop()
-
-        i = torch.randint(1,5,(1,)) #si marche pas, faites torch.randin(1,5,(1,))
-        
-        if(i==1):
-            self.pos[0]+=1
-        elif(i==2):
-            self.pos[0]-=1
-        elif(i==3):
-            self.pos[1]+=1
-        else:
-            self.pos[1]-=1
-        # r=torch.randint(0,2,(2,))
-        # self.pos[r[0]]+=[-1,1][r[1]]
-        
-    def rl_moves(self,matrice):
-        return None
-
-
+    
+class randomAgent(Agent):
+    def __init__(self, x, y):
+        super().__init__(x, y)
+    
     def move(self, matrice):
-        if(self.comportement == "basic"):
-            self.basic_moves()
-        elif(self.comportement == "random"):
-            self.random_moves()    
-        elif(self.comportement == "rl"):
-            self.rl_moves(matrice)
+        x,y=self.pos
+        r={e for e in [(x+1,y),(x-1,y),(x,y+1),(x,y-1)] if self.is_valid(matrice,e)}.pop()
+        self.pos = torch.tensor(r)
+
+
+class RLAgent(Agent):
+    def __init__(self, x, y, matrix):
+        super().__init__(x, y)
+        self.q_table = torch.zeros(4, matrix.size()[0], matrix.size()[0]) #our q-table, matrix-size multiplied by our possible actions along a new axis
+        self.gamma = 0.75 #discount factor
+        self.alpha = 0.9 #learning rate
+        self.matrix = matrix
+        self.reward = []
+        
+        #Train the RLAgent
+        self.train(20)
+        print(self.q_table)
+
+    def q_learning(self, state, action, reward, next_state):
+        #applying the Bellman formula 
+        self.q_table[action, state[1], state[0]] = (1-self.alpha)*self.q_table[action, state[1], state[0]] + self.alpha*(reward+self.gamma*torch.max(self.q_table[:,next_state[1], next_state[0]]))
+
+    def train(self, iteration):
+        #training loop to improve the q-table
+        for _ in range(iteration):
+            #choose an action based on the current state/current position
+            action = torch.argmax(self.q_table[:,self.pos[1], self.pos[0]])
+            print("action is", action)
+            action_str = self.strAction[action]
+
+            #perform the action and recieve an award
+            if action_str == "up":
+                next_position = torch.tensor([self.pos[0], self.pos[1]-1])
+                if not (self.is_valid(self.matrix, next_position)):
+                    next_position = torch.tensor([self.pos[0], 0])
+
+            elif action_str == "down":
+                next_position = torch.tensor([self.pos[0], self.pos[1]+1])
+                if not (self.is_valid(self.matrix, next_position)):
+                    next_position = torch.tensor([self.pos[0], self.pos[1]])
+
+            elif action_str == "left":
+                next_position = torch.tensor([self.pos[0]-1, self.pos[1]])
+                if not (self.is_valid(self.matrix, next_position)):
+                    next_position = torch.tensor([0, self.pos[1]])
+
+            elif action_str == "right":
+                next_position = torch.tensor([self.pos[0]+1, self.pos[1]])
+                if not (self.is_valid(self.matrix, next_position)):
+                    next_position = torch.tensor([self.pos[0], self.pos[1]])
+                
+            self.score+=self.matrix[next_position[1], next_position[0]]
+            self.q_learning(self.pos, action, self.score, next_position)
+            self.pos = next_position
+            print("next pos is", next_position)
+        #self.score=0
+
+    def move(self, _):
+        #Return the index of the max element in the Q-table, corresponding to the best action to take
+        return torch.argmax(self.q_table[self.pos[0], self.pos[1]])
+                
+
+
 
