@@ -45,6 +45,7 @@ class LabyrinthEnv(gym.Env):
 
     def step(self, action):
         # Execute the action and update the agent's position
+        former_pos = np.copy(self.agent_pos)
         if action == 0:
             self.agent_pos[0] = max(0, self.agent_pos[0]-1)
         elif action == 1:
@@ -54,14 +55,18 @@ class LabyrinthEnv(gym.Env):
         elif action == 3:
             self.agent_pos[1] = min(self.size-1, self.agent_pos[1]+1)
 
+        # punish the agent if it runs to a wall (-10pts, wall+moving cost)
+        if np.array_equal(self.agent_pos, former_pos): 
+            reward = -9.0
+            self.countReward+=reward
         # Check if the agent has reached the goal
         done = np.array_equal(self.agent_pos, self.goal_pos)
         if done:
-            self.countReward += 1000.0
             reward = 1000.0
+            self.countReward+=reward
         else:
-            self.countReward -= 1.0
             reward = -1.0
+            self.countReward+=reward
 
         return self.agent_pos, reward, self.countReward, done, {}
 
