@@ -28,7 +28,7 @@ class LabyrinthEnv(gym.Env):
 
         # The action space is a discrete space with 4 actions (up, down, left, right)
         self.action_space = spaces.Discrete(4)
-        self.directionStr = ("up", "down", "left", "right")
+        self.directionStr = ("left", "right", "up", "down")
 
         # The observation space is a multi-discrete space representing the position of the agent
         self.observation_space = spaces.MultiDiscrete([self.size, self.size])
@@ -94,17 +94,34 @@ class LabyrinthEnv(gym.Env):
         # Update the display
         pygame.display.update()
 
-    def random_moves(self, iterations):
+    def random_moves(self, iterations, rendering=True, msSteps=0):
         # Reset the environment
         observation = self.reset()
         for i in range(iterations):
             action = self.action_space.sample()
             observation, reward, countReward, done, info = self.step(action)
-            self.render()
-            time.sleep(0.1)
-            print(i,"|",env.directionStr[action],"|",observation,"|",reward,"|", countReward,"|",done, "|",info)
+            if rendering: self.render()
+            time.sleep(msSteps)
+            print(i,"|",env.directionStr[action],"|",observation,"|",reward,"|", countReward,"|",done,"|",info)
             if(done):
                 break
+
+    def basic_moves(self, rendering=True, msSteps=0):
+        observation = self.reset()
+        done = False
+        i=0
+        while not done:            
+            if rendering: self.render()
+            if self.agent_pos[1]>0:
+                observation, reward, countReward, done, info = self.step(2)
+                action=0
+            elif self.agent_pos[1] == 0:
+                observation, reward, countReward, done, info = self.step(1)
+                action=3
+            else: done!=done
+            time.sleep(msSteps)
+            print(i,"|",env.directionStr[action],"|",observation,"|",reward,"|", countReward,"|",done, "|",info)
+
 
 
 
@@ -112,6 +129,6 @@ class LabyrinthEnv(gym.Env):
 # Create the environment
 env = LabyrinthEnv()
 
-env.random_moves(1000)
+env.random_moves(1000, rendering=True, msSteps=0.1)
 
 env.close()
