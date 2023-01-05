@@ -10,6 +10,10 @@ import torch.optim as optim
 
 class LabyrinthEnv(gym.Env):
     def __init__(self):
+
+        # Initialize pygame and the display
+        pygame.init()        
+        self.player = pygame.image.load("robot.jpg")
         # The size of the labyrinth is 10x10
         self.size = 10
 
@@ -62,10 +66,6 @@ class LabyrinthEnv(gym.Env):
         return self.agent_pos, reward, self.countReward, done, {}
 
     def render(self, mode='human'):
-        # Initialize pygame and the display
-        pygame.init()
-        
-        player = pygame.image.load("robot.jpg")
         
         size_format = 80
         x=size_format*10
@@ -90,30 +90,28 @@ class LabyrinthEnv(gym.Env):
         #Values of the rendered rectangles must be changed if the starting and finishing points are changed
         pygame.draw.rect(screen,(0,255,0),(0,720,80,80))
         pygame.draw.rect(screen,(255,0,0),(720,0,80,80))
-        screen.blit(player, (agent_x,agent_y))
+        screen.blit(self.player, (agent_x,agent_y))
         # Update the display
         pygame.display.update()
 
-        # Run the pygame loop until the window is closed
-        #running = True
-        #while running:
-            #for event in pygame.event.get():
-                #if event.type == pygame.QUIT:
-                    #running = False
+    def random_moves(self, iterations):
+        # Reset the environment
+        observation = self.reset()
+        for i in range(iterations):
+            action = self.action_space.sample()
+            observation, reward, countReward, done, info = self.step(action)
+            self.render()
+            time.sleep(0.1)
+            print(i,"|",env.directionStr[action],"|",observation,"|",reward,"|", countReward,"|",done, "|",info)
+            if(done):
+                break
+
+
 
 
 # Create the environment
 env = LabyrinthEnv()
 
-# Reset the environment
-observation = env.reset()
-for i in range(1000):
-    action = env.action_space.sample()
-    observation, reward, countReward, done, info = env.step(action)
-    env.render()
-    #time.sleep(0.1)
-    print(i,"|",env.directionStr[action],"|",observation,"|",reward,"|", countReward,"|",done, "|",info)
-    if(done):
-        break
+env.random_moves(1000)
 
 env.close()
