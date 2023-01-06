@@ -46,7 +46,7 @@ class RLAgent(Agent):
         self.reward = []
         
         #Train the RLAgent
-        self.train(20)
+        self.train(750)
         print(self.q_table)
 
     def q_learning(self, state, action, reward, next_state):
@@ -54,44 +54,68 @@ class RLAgent(Agent):
         self.q_table[action, state[1], state[0]] = (1-self.alpha)*self.q_table[action, state[1], state[0]] + self.alpha*(reward+self.gamma*torch.max(self.q_table[:,next_state[1], next_state[0]]))
 
     def train(self, iteration):
+        #saving the initial position:
+        init_pos = self.pos
+
         #training loop to improve the q-table
         for _ in range(iteration):
             #choose an action based on the current state/current position
             action = torch.argmax(self.q_table[:,self.pos[1], self.pos[0]])
-            print("action is", action)
+            #print("action is", action)
             action_str = self.strAction[action]
 
             #perform the action and recieve an award
+            #hit a wall and get punished:
+            hit_a_wall = False
             if action_str == "up":
                 next_position = torch.tensor([self.pos[0], self.pos[1]-1])
                 if not (self.is_valid(self.matrix, next_position)):
                     next_position = torch.tensor([self.pos[0], 0])
+                    hit_a_wall = True
 
             elif action_str == "down":
                 next_position = torch.tensor([self.pos[0], self.pos[1]+1])
                 if not (self.is_valid(self.matrix, next_position)):
                     next_position = torch.tensor([self.pos[0], self.pos[1]])
+                    hit_a_wall = True
 
             elif action_str == "left":
                 next_position = torch.tensor([self.pos[0]-1, self.pos[1]])
                 if not (self.is_valid(self.matrix, next_position)):
                     next_position = torch.tensor([0, self.pos[1]])
+                    hit_a_wall = True
 
             elif action_str == "right":
                 next_position = torch.tensor([self.pos[0]+1, self.pos[1]])
                 if not (self.is_valid(self.matrix, next_position)):
                     next_position = torch.tensor([self.pos[0], self.pos[1]])
-                
-            self.score+=self.matrix[next_position[1], next_position[0]]
+                    hit_a_wall = True
+            
+            self.score = self.matrix[next_position[1], next_position[0]]
+            if hit_a_wall:
+                self.score-=100
             self.q_learning(self.pos, action, self.score, next_position)
             self.pos = next_position
-            print("next pos is", next_position)
-        #self.score=0
+            #print("next pos is", next_position)
+
+        #restauring everything train related for the test
+        self.score=0
+        self.pos = init_pos
 
     def move(self, _):
         #Return the index of the max element in the Q-table, corresponding to the best action to take
-        return torch.argmax(self.q_table[self.pos[0], self.pos[1]])
-                
+        print(self.pos)
+        decision = torch.argmax(self.q_table[:,self.pos[1], self.pos[0]])
+        if torch.equal(decision, torch.tensor(0)):
+            self.pos[1]-=1
+        elif torch.equal(decision, torch.tensor(1)):
+            self.pos[1]+=1
+        elif torch.equal(decision, torch.tensor(2)):
+            self.pos[0]-=1
+        elif torch.equal(decision, torch.tensor(3)):             
+            self.pos[0]+=1 
+        else: 
+            print("wtf")  
 
 
 
