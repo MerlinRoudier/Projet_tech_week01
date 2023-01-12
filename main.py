@@ -6,7 +6,7 @@ env = Environ()
 
 for _ in range(1000):
     env.step()
-    env.reward()
+    #env.reward()
     env.render(0)
     time.sleep(0.5)
     #print(env)

@@ -34,7 +34,7 @@ class Environ(gymnasium.Env):
         self.starting_pos = [0, self.size-1]
 
         #The agent starts at the bottom-left corner of the labyrinth
-        self.arrayAgent = [RLAgent(self.starting_pos[0], self.starting_pos[1], self.matrix)]
+        self.arrayAgent = [RLAgent(self.starting_pos[0], self.starting_pos[1], self.matrix, 0.01)]
 
         # The action space is a discrete space with 4 actions (up, down, left, right)
         self.action_space = spaces.Discrete(4)
