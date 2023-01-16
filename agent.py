@@ -46,15 +46,13 @@ class RLAgent(Agent):
         self.epsilon = epsilon
         
         #Train the RLAgent
-        self.train(1500)
-        print(self.q_table)
+        
 
-    def q_learning(self, state, action, reward, next_state):
+    def Bellman_Formula(self, state, action, reward, next_state):
         #applying the Bellman formula 
         self.q_table[action, state[1], state[0]] = (1-self.alpha)*self.q_table[action, state[1], state[0]] + self.alpha*(reward+self.gamma*torch.max(self.q_table[:,next_state[1], next_state[0]]))
 
     def train(self, iteration):
-
         #training loop to improve the q-table
         for _ in range(iteration):
             done = False
@@ -98,7 +96,7 @@ class RLAgent(Agent):
                 self.score = self.matrix[next_position[1], next_position[0]]
                 if hit_a_wall:
                     self.score=-1000
-                self.q_learning(self.pos, action, self.score, next_position)
+                self.Bellman_Formula(self.pos, action, self.score, next_position)
                 self.pos = next_position
                 step_number+=1
 
@@ -134,6 +132,12 @@ class RLAgent(Agent):
         for i in range(len(print_matrix)):
             print(print_matrix[i])
         return None
+    
+    def save_q_table(self):
+        torch.save(self.q_table, "q_table.pt")
+    
+    def load_q_table(self):
+        self.q_table = torch.load("q_table.pt")
 
 
 

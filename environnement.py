@@ -1,40 +1,28 @@
-import gymnasium
+import gymnasium as gym
 from gymnasium import spaces 
 import pygame
-import time
 import torch
-import torch.nn as nn
-import torch.optim as optim
 from agent import basicAgent, randomAgent, RLAgent
 
 
-class Environ(gymnasium.Env):
-    def __init__(self):
+class Environ(gym.Env):
+    def __init__(self, matrix_size, goal_pos, starting_pos):
         # Initialize pygame and the display
         pygame.init()        
-        # The size of the labyrinth is 10x10
-        self.size = 10
         # Matrix representing the environment and its rewards
-        self.matrix = torch.tensor([[-1,-1,-1,-1,-1,-1,-1,-1,-1,1000],
-                                    [-1,-1,-1,-1,-1,-1,-1,-1,-1,-1],
-                                    [-1,-1,-1,-1,-1,-1,-1,-1,-1,-1],
-                                    [-1,-1,-1,-1,-1,-1,-1,-1,-1,-1],
-                                    [-1,-1,-1,-1,-1,-1,-1,-1,-1,-1],
-                                    [-1,-1,-1,-1,-1,-1,-1,-1,-1,-1],
-                                    [-1,-1,-1,-1,-1,-1,-1,-1,-1,-1],
-                                    [-1,-1,-1,-1,-1,-1,-1,-1,-1,-1],
-                                    [-1,-1,-1,-1,-1,-1,-1,-1,-1,-1],
-                                    [-1,-1,-1,-1,-1,-1,-1,-1,-1,-1]])
+        self.size = matrix_size
+        self.matrix = torch.zeros(matrix_size, matrix_size)-1
+        self.matrix[0,matrix_size-1]=1000 #La fin est en abscisse ?
         #Initialize the agent arrays
         
         #The goal is at the top-right corner of the labyrinth
-        self.goal_pos = torch.tensor([self.size-1, 0])
+        self.goal_pos = goal_pos
 
         #The starting position is at the bottom-left corner of the labyrinth
-        self.starting_pos = [0, self.size-1]
+        self.starting_pos = starting_pos
 
         #The agent starts at the bottom-left corner of the labyrinth
-        self.arrayAgent = [RLAgent(self.starting_pos[0], self.starting_pos[1], self.matrix, 0.01)]
+        self.arrayAgent = [RLAgent(self.starting_pos[0], self.starting_pos[1], self.matrix, 0.001)]
 
         # The action space is a discrete space with 4 actions (up, down, left, right)
         self.action_space = spaces.Discrete(4)
@@ -43,7 +31,7 @@ class Environ(gymnasium.Env):
         # The observation space is a multi-discrete space representing the position of the agent
         self.observation_space = spaces.MultiDiscrete([self.size, self.size])
         
-        self.countReward = 0
+       
 
     def reset(self):
         # Reset the agents's position to the bottom-left corner
@@ -54,15 +42,7 @@ class Environ(gymnasium.Env):
         # Execute the action and update the agent's position
         for a in self.arrayAgent:
             a.move(self.matrix)
-        #return self.agent_pos, reward, self.countReward, done, {}
-
-    def reward(self):
-        # Check if the agents have reached the goals
-        for a in self.arrayAgent:
-            if torch.equal(a.pos, self.goal_pos):
-                a.score+=1000
-            else:
-                a.score-=1
+        #return self.agent_pos, done, {}
 
     def render(self, numberAgent):
         
@@ -98,3 +78,6 @@ class Environ(gymnasium.Env):
 
     def __str__(self):
         return "pos agent: "+str(self.arrayAgent[0].pos) +" \nReward agent: "+str(self.arrayAgent[0].score)
+
+    def set_obstacle(self, coords):
+        self.matrix[coords[0], coords[1]] = -1000
