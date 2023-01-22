@@ -45,7 +45,6 @@ class Environ(gym.Env):
         #return self.agent_pos, done, {}
 
     def render(self, numberAgent):
-        
         size_format = 80
         x=size_format*10
         y=size_format*10
@@ -63,8 +62,12 @@ class Environ(gym.Env):
         agent_x, agent_y = self.arrayAgent[numberAgent].pos
         agent_x, agent_y = agent_x*size_format, agent_y*size_format
         
-        goal_x, goal_y = self.goal_pos
-        goal_x, goal_y = goal_x*size_format+size_format/2, goal_y*size_format+size_format/2
+        # Dessiner les obstacles dans le labyrinthe.
+        posx,posy = self.matrix.size()
+        for i in range(posx):
+            for j in range(posy):
+                if(self.matrix[i][j] == -1000):
+                    pygame.draw.rect(screen,(0,0,0),(i*80,j*80,80,80))
         
         #Values of the rendered rectangles must be changed if the starting and finishing points are changed
         pygame.draw.rect(screen,(0,255,0),(0,720,80,80))
