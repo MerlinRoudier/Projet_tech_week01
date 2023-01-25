@@ -23,7 +23,7 @@ O O O O * * * * * * \
 * * * * * * * O O *'
 o=set_obstacles(o,10)
 
-env=Env(obstacles=o,rendering='visual')
+env=Env(obstacles=o,rendering='tty')
 env.add_agent('rl')
 env.train()
 env.start()

@@ -24,17 +24,16 @@ class Env(gym.Env):
 			3: torch.tensor((0,-1)),
 		}
 
-	def add_agent(self,typeAgent='basic', pos=(0,0), alpha=.85, gamma=.3, epsilon=.05):
+	def add_agent(self,typeAgent='basic', pos=(0,0), alpha=.85, gamma=.3, epsilon=.01):
 		self.agents.append(setup(typeAgent,pos,self.size,alpha,gamma,epsilon))
 
 	def has_ended(self, is_alive=True):
 		if self.time>self.timeout or not is_alive:
 			return True
-		var=True
 		for agent in self.agents:
-			if not torch.equal(agent.pos, self.goal_pos):
-				var=False
-		return var
+			if torch.equal(agent.pos, self.goal_pos):
+				return True
+		return False
 
 	def render_visual(self,pos=torch.tensor((-1,-1))):
 		posx,posy = self.size,self.size
@@ -58,19 +57,19 @@ class Env(gym.Env):
 		pygame.draw.rect(screen,(0,255,0),(0,(size_format*self.size)-size_format,size_format,size_format))
 		pygame.draw.rect(screen,(255,0,0),((size_format*self.size)-size_format,0,size_format,size_format))
 
-
-		agent_x, agent_y = pos
-		agent_x, agent_y = (self.size-agent_x-1)*size_format, agent_y*size_format
-		screen.blit(self.image, (agent_y,agent_x))
+		for agent in self.agents:
+			agent_x, agent_y = agent.pos
+			agent_x, agent_y = (self.size-agent_x-1)*size_format, agent_y*size_format
+			screen.blit(self.image, (agent_y,agent_x))
 		pygame.display.update()
 		sleep(.5)
 
-	def render_tty(self,pos=torch.tensor((-1,-1))):
+	def render_tty(self):
 		s=''
 		for i in range(self.size-1, -1, -1):
 			for j in range(0, self.size):
 				square=torch.tensor((i,j))
-				if torch.equal(square,pos):
+				if tuple(square) in [tuple(agent.pos) for agent in self.agents]:
 					s+='R '
 				elif torch.equal(square, self.goal_pos):
 					s+='E '
@@ -79,28 +78,30 @@ class Env(gym.Env):
 				else:
 					s+='* '
 			s+='\n'
-		s+=str(pos)
+		for agent in self.agents:
+			s+=str(agent.pos)
+			s+='\n'
 		sleep(.5)
 		print(s)
 
-	def render(self, pos):
+	def render(self):
 		if self.rendering=='visual':
-			self.render_visual(pos)
+			self.render_visual()
 		elif self.rendering=='tty':
-			self.render_tty(pos)
+			self.render_tty()
 
 	def start(self):
+		self.reset()
 		for agent in self.agents:
-			self.reset()
 			agent.pos=torch.tensor((0,0))
-			while not self.has_ended():
+		while not self.has_ended():
+			for agent in self.agents:
 				action=agent.move()
 				new_pos	,reward, is_alive=self.step(agent.pos, action)
 				if self._is_valid(new_pos):
-					self.render(agent.pos)
 					agent.pos=new_pos
 				self.time+=1
-			self.render(agent.pos)
+			self.render()
 
 	def train(self, num_agent=0):
 		agent=self.agents[num_agent]
@@ -122,7 +123,7 @@ class Env(gym.Env):
 		self.time=0
 		
 	def _is_valid(self, pos):
-		return (pos[0]>=0 and pos[0]<self.size) and (pos[1]>=0 and pos[1]<self.size)
+		return ((pos[0]>=0 and pos[0]<self.size) and (pos[1]>=0 and pos[1]<self.size)) and (tuple(pos) not in self.obstacles)
 	
 	def step(self, pos, action):
 		is_alive=True
@@ -132,9 +133,6 @@ class Env(gym.Env):
 			is_alive=False
 		elif not self._is_valid(new_pos):
 			reward=-1e3
-			is_alive=False
-		elif tuple(new_pos) in self.obstacles:
-			reward=-1e4
 			is_alive=False
 		else:
 			reward=-1
