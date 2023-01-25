@@ -1,135 +1,145 @@
-import gymnasium as gym
-from gymnasium import spaces 
-import pygame
 import torch
-from agent import basicAgent, randomAgent, RLAgent
+import gymnasium as gym
+import pygame
+from time import sleep
+from agent import setup
 
-
-class Environ(gym.Env):
-    #Constructor
-    def __init__(self, matrix_size, goal_pos, starting_pos):
-        # Initialize pygame and the display
-        pygame.init()        
-        # Matrix representing the environment and its rewards
-        self.size = matrix_size
-        self.matrix = torch.zeros(matrix_size, matrix_size)-1
-        self.matrix[0,matrix_size-1]=1000 #La fin est en abscisse ?
-        #Initialize the agent arrays
+class Env(gym.Env):
+	def __init__(self, size=10, timeout=1000, nb_i=1000, rendering='visual', goal_pos=(9,9), obstacles=[]):
+		pygame.init()
+		self.size=size
+		self.timeout=timeout
+		self.nb_i=nb_i
+		self.obstacles=obstacles
+		self.rendering=rendering
+		self.goal_pos=torch.tensor(goal_pos)
+		self.time=0
+		self.agents=[]
+		self.image=pygame.image.load("robot.jpg")
         
-        #The goal is at the top-right corner of the labyrinth
-        self.goal_pos = goal_pos
+		self._action_to_direction = {
+			0: torch.tensor((1,0)),
+			1: torch.tensor((0,1)),
+			2: torch.tensor((-1,0)),
+			3: torch.tensor((0,-1)),
+		}
 
-        #The starting position is at the bottom-left corner of the labyrinth
-        self.starting_pos = starting_pos
+	def add_agent(self,typeAgent='basic', pos=(0,0), alpha=.85, gamma=.3, epsilon=.05):
+		self.agents.append(setup(typeAgent,pos,self.size,alpha,gamma,epsilon))
 
-        #The agent starts at the bottom-left corner of the labyrinth
-        self.arrayAgent = []
+	def has_ended(self, is_alive=True):
+		if self.time>self.timeout or not is_alive:
+			return True
+		var=True
+		for agent in self.agents:
+			if not torch.equal(agent.pos, self.goal_pos):
+				var=False
+		return var
 
-        # The action space is a discrete space with 4 actions (up, down, left, right)
-        self.action_space = spaces.Discrete(4)
-        self.directionStr = ("left", "right", "up", "down")
+	def render_visual(self,pos=torch.tensor((-1,-1))):
+		posx,posy = self.size,self.size
+		size_format = 80
+		x=size_format*posx
+		y=size_format*posy
 
-        # The observation space is a multi-discrete space representing the position of the agent
-        self.observation_space = spaces.MultiDiscrete([self.size, self.size]) 
+		screen = pygame.display.set_mode((x, y))
 
-    #Agent handling part
+		screen.fill((255, 255, 255))
 
-    def add_agent(self,agent,alpha=0.85, gamma=0.3, epsilon=0.005):
-        #the optionnal arguments are only required for the RL agent, choosing them while choosing another agent won't affect the process
-        if agent=="RLAgent":
-            self.arrayAgent.append(RLAgent(self.starting_pos[0], self.starting_pos[1],self.matrix, alpha, gamma, epsilon))
-        elif agent=="Basic":
-            self.arrayAgent.append(basicAgent(self.starting_pos[0], self.starting_pos[1]))
-        elif agent=="Random":
-            self.arrayAgent.append(randomAgent(self.starting_pos[0], self.starting_pos[1]))
-        else: 
-            print("required agent not found")
-            exit()
-        return None
+		for i in range(self.size+1):
+			pygame.draw.line(screen, (128, 128, 128), (i*size_format, 0), (i*size_format, y))
+			pygame.draw.line(screen, (128, 128, 128), (0, i*size_format), (x, i*size_format))
 
-    def remove_agent(self, index):
-        self.arrayAgent.pop(index)
-        return None 
-    
-    def remove_all_agents(self):
-        self.arrayAgent = []
-        return None
-    
-    def train_all_agents(self, iteration):
-        #This function will train all and only the RL agents  
-        #iteration is a list, that mean we want to set differents iteration by agent
-        assert type(iteration) == list
-        index=0
-        for agent in self.arrayAgent:
-            if type(agent) == RLAgent:
-                agent.train(iteration[index])
-                index+=1
+		for i in range(posx):
+			for j in range(posy):
+				if((i,j) in self.obstacles):
+					pygame.draw.rect(screen,(0,0,0),(j*size_format,(self.size-i-1)*size_format,size_format,size_format))
+
+		pygame.draw.rect(screen,(0,255,0),(0,(size_format*self.size)-size_format,size_format,size_format))
+		pygame.draw.rect(screen,(255,0,0),((size_format*self.size)-size_format,0,size_format,size_format))
 
 
+		agent_x, agent_y = pos
+		agent_x, agent_y = (self.size-agent_x-1)*size_format, agent_y*size_format
+		screen.blit(self.image, (agent_y,agent_x))
+		pygame.display.update()
+		sleep(.5)
 
+	def render_tty(self,pos=torch.tensor((-1,-1))):
+		s=''
+		for i in range(self.size-1, -1, -1):
+			for j in range(0, self.size):
+				square=torch.tensor((i,j))
+				if torch.equal(square,pos):
+					s+='R '
+				elif torch.equal(square, self.goal_pos):
+					s+='E '
+				elif tuple(square) in self.obstacles:
+					s+='O '
+				else:
+					s+='* '
+			s+='\n'
+		s+=str(pos)
+		sleep(.5)
+		print(s)
 
-    #Environment handling part
+	def render(self, pos):
+		if self.rendering=='visual':
+			self.render_visual(pos)
+		elif self.rendering=='tty':
+			self.render_tty(pos)
 
-    def reset(self):
-        # Reset the agents's position to the bottom-left corner
-        for a in self.arrayAgent:
-            a.pos = self.starting_pos
+	def start(self):
+		for agent in self.agents:
+			self.reset()
+			agent.pos=torch.tensor((0,0))
+			while not self.has_ended():
+				action=agent.move()
+				new_pos	,reward, is_alive=self.step(agent.pos, action)
+				if self._is_valid(new_pos):
+					self.render(agent.pos)
+					agent.pos=new_pos
+				self.time+=1
+			self.render(agent.pos)
 
-    def step(self):
-        # Execute the action and update the agent's position
-        for a in self.arrayAgent:
-            a.move(self.matrix)
-        #return self.agent_pos, done, {}
+	def train(self, num_agent=0):
+		agent=self.agents[num_agent]
+		for _ in range(self.nb_i):
+			self.reset()
+			agent.pos=torch.tensor((0,0))
+			is_alive=True
+			while not self.has_ended(is_alive):
+				action=agent.move()
+				new_pos,reward, is_alive = self.step(agent.pos, action)
+				if(is_alive):
+					agent.update(action, reward, new_pos)
+					agent.pos=new_pos
+					self.time+=1
+				else:
+					agent.update(action, reward, agent.pos)
 
-    def render(self):
-        # Réglage de la taille de la fenêtre.
-        posx,posy = self.matrix.size()
-        size_format = 80
-        x=size_format*posx
-        y=size_format*posy
-        
-        screen = pygame.display.set_mode((x, y))
+	def reset(self):
+		self.time=0
+		
+	def _is_valid(self, pos):
+		return (pos[0]>=0 and pos[0]<self.size) and (pos[1]>=0 and pos[1]<self.size)
+	
+	def step(self, pos, action):
+		is_alive=True
+		new_pos=pos+self._action_to_direction[action]
+		if torch.equal(new_pos,self.goal_pos):
+			reward=1e3
+			is_alive=False
+		elif not self._is_valid(new_pos):
+			reward=-1e3
+			is_alive=False
+		elif tuple(new_pos) in self.obstacles:
+			reward=-1e4
+			is_alive=False
+		else:
+			reward=-1
+			self.time+=1
+			if self.time>=self.timeout:
+				is_alive=False
+		return new_pos, reward, is_alive
 
-        # Fill the screen with white
-        screen.fill((255, 255, 255))
-
-        # Draw the grid
-        for i in range(self.size+1):
-            pygame.draw.line(screen, (128, 128, 128), (i*size_format, 0), (i*size_format, y))
-            pygame.draw.line(screen, (128, 128, 128), (0, i*size_format), (x, i*size_format))
-        
-        # Dessiner les obstacles dans le labyrinthe.
-        for i in range(posx):
-            for j in range(posy):
-                if(self.matrix[j][i] == -100000):
-                    pygame.draw.rect(screen,(0,0,0),(i*size_format,j*size_format,size_format,size_format))
-        
-        #Values of the rendered rectangles must be changed if the starting and finishing points are changed
-        pygame.draw.rect(screen,(0,255,0),(0,(size_format*10)-size_format,size_format,size_format))
-        pygame.draw.rect(screen,(255,0,0),((size_format*10)-size_format,0,size_format,size_format))
-
-        # Draw the agents 
-        for i in range(len(self.arrayAgent)):
-            agent_x, agent_y = self.arrayAgent[i].pos
-            agent_x, agent_y = agent_x*size_format, agent_y*size_format
-            screen.blit(self.arrayAgent[i].image, (agent_x,agent_y))
-        # Update the display
-        pygame.display.update()
-    
-    def checkEnd(self):
-        for i in range(len(self.arrayAgent)):
-            if torch.equal(self.arrayAgent[i].pos, self.goal_pos):
-                return True
-        return False
-
-    def set_obstacle(self, coords):
-        if(self.matrix[coords[0], coords[1]] != -100000):
-            self.matrix[coords[0], coords[1]] = -100000
-    
-    # Misc part
-    def __str__(self):
-        return "pos agent: "+str(self.arrayAgent[0].pos) +" \nReward agent: "+str(self.arrayAgent[0].score)
-
-    def close(self):
-        super().close()
-        pygame.quit()
