@@ -5,11 +5,10 @@ from time import sleep
 from agent import setup
 
 class Env(gym.Env):
-	def __init__(self, size=10, timeout=1000, nb_i=1000, rendering='visual', goal_pos=(9,9), obstacles=[]):
+	def __init__(self, size=10, timeout=1000, rendering='visual', goal_pos=(9,9), obstacles=[]):
 		pygame.init()
 		self.size=size
 		self.timeout=timeout
-		self.nb_i=nb_i
 		self.obstacles=obstacles
 		self.rendering=rendering
 		self.goal_pos=torch.tensor(goal_pos)
@@ -35,7 +34,7 @@ class Env(gym.Env):
 				return True
 		return False
 
-	def render_visual(self,pos=torch.tensor((-1,-1))):
+	def render_visual(self,refresh):
 		posx,posy = self.size,self.size
 		size_format = 80
 		x=size_format*posx
@@ -62,9 +61,9 @@ class Env(gym.Env):
 			agent_x, agent_y = (self.size-agent_x-1)*size_format, agent_y*size_format
 			screen.blit(self.image, (agent_y,agent_x))
 		pygame.display.update()
-		sleep(.5)
+		sleep(refresh)
 
-	def render_tty(self):
+	def render_tty(self, refresh):
 		s=''
 		for i in range(self.size-1, -1, -1):
 			for j in range(0, self.size):
@@ -81,33 +80,33 @@ class Env(gym.Env):
 		for agent in self.agents:
 			s+=str(agent.pos)
 			s+='\n'
-		sleep(.5)
+		sleep(refresh)
 		print(s)
 
-	def render(self):
+	def render(self, refresh=.5):
 		if self.rendering=='visual':
-			self.render_visual()
+			self.render_visual(refresh)
 		elif self.rendering=='tty':
-			self.render_tty()
+			self.render_tty(refresh)
 
 	def start(self):
 		self.reset()
 		for agent in self.agents:
-			agent.pos=torch.tensor((0,0))
+			agent.pos=agent.origin
 		while not self.has_ended():
 			for agent in self.agents:
 				action=agent.move()
 				new_pos	,reward, is_alive=self.step(agent.pos, action)
 				if self._is_valid(new_pos):
 					agent.pos=new_pos
-				self.time+=1
+			self.time+=1
 			self.render()
 
-	def train(self, num_agent=0):
+	def train(self, num_agent=0, nb_i=1000):
 		agent=self.agents[num_agent]
-		for _ in range(self.nb_i):
+		for _ in range(nb_i):
 			self.reset()
-			agent.pos=torch.tensor((0,0))
+			agent.pos=agent.origin
 			is_alive=True
 			while not self.has_ended(is_alive):
 				action=agent.move()
@@ -136,8 +135,5 @@ class Env(gym.Env):
 			is_alive=False
 		else:
 			reward=-1
-			self.time+=1
-			if self.time>=self.timeout:
-				is_alive=False
 		return new_pos, reward, is_alive
 

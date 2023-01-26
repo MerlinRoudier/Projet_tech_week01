@@ -12,7 +12,7 @@ def set_obstacles(s,size):
 
 o='\
 * O * * * O * * * * \
-* O * * * O * * * * \
+O * * * * O * * * * \
 * O * * * O * * * * \
 * * * * * * * * * * \
 O O O O * * * * * * \
@@ -23,7 +23,7 @@ O O O O * * * * * * \
 * * * * * * * O O *'
 o=set_obstacles(o,10)
 
-env=Env(obstacles=o,rendering='tty')
+env=Env(obstacles=o,size=10,rendering='visual')
 env.add_agent('rl')
 env.train()
 env.start()

@@ -19,6 +19,7 @@ class randomAgent:
 class RLAgent:
 	def __init__(self, pos, size, alpha, gamma, epsilon):
 		self.pos=torch.tensor(pos)
+		self.origin=self.pos
 		self.q_table = torch.rand(4, size, size)/100
 		self.gamma=gamma
 		self.alpha=alpha
@@ -34,6 +35,23 @@ class RLAgent:
 		(1-self.alpha)*self.q_table[action,self.pos[0],self.pos[1]] + \
 		self.alpha*(reward+self.gamma*torch.max(self.q_table[:,new_pos[0],new_pos[1]]))
 
+class LRLAgent:
+	def __init__(self, pos, size, alpha, gamma, epsilon):
+		self.pos=torch.tensor(pos)
+		self.size=size
+		self.weights = torch.rand(4, size*size)/100
+		self.bias = torch.rand(4)/100
+		self.gamma=gamma
+		self.alpha=alpha
+		self.epsilon=epsilon
+	
+	def move(self):
+		if torch.rand(1)<self.epsilon:
+			return int(torch.randint(low=0,high=4, size=(1,)))
+		return int(torch.argmax(self.weights[:,self.pos[0]*self.size+self.pos[1]]+self.bias))
+	
+	def update(self, action, reward, new_pos):
+		return None
 
 def setup(typeAgent, pos, size, alpha, gamma, epsilon):
 	if typeAgent=='basic':
