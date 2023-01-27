@@ -2,10 +2,10 @@ import torch
 
 class basicAgent:
 	def __init__(self, pos):
-        	self.pos=torch.tensor(pos)
+		self.pos=torch.tensor(pos)
 
 	def move(self):
-        	return 0 if self.pos[0]<9 else 1
+		return 0 if self.pos[0]<9 else 1
 
 
 class randomAgent:

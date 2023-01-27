@@ -3,6 +3,7 @@ import gymnasium as gym
 import pygame
 from time import sleep
 from agent import setup
+from PIL import Image
 
 class Env(gym.Env):
 	def __init__(self, size=10, timeout=1000, rendering='visual', goal_pos=(9,9), obstacles=[]):
@@ -14,7 +15,6 @@ class Env(gym.Env):
 		self.goal_pos=torch.tensor(goal_pos)
 		self.time=0
 		self.agents=[]
-		self.image=pygame.image.load("robot.jpg")
         
 		self._action_to_direction = {
 			0: torch.tensor((1,0)),
@@ -22,6 +22,16 @@ class Env(gym.Env):
 			2: torch.tensor((-1,0)),
 			3: torch.tensor((0,-1)),
 		}
+
+		# REQUIRED FOR THE RENDER VISUAL, ONLY REQUIRED TO INITIALIZE ONCE
+		self.x,self.y = 900,900 # static pixels size for the window
+		self.size_format = int(self.x/self.size) #dynamique
+		image = Image.open('robot.jpg')
+		n_image = image.resize((self.size_format,self.size_format))
+		n_image.save('robot.jpg')
+
+		self.image=pygame.image.load("robot.jpg")
+
 
 	def add_agent(self,typeAgent='basic', pos=(0,0), alpha=.85, gamma=.3, epsilon=.01):
 		self.agents.append(setup(typeAgent,pos,self.size,alpha,gamma,epsilon))
@@ -35,30 +45,27 @@ class Env(gym.Env):
 		return False
 
 	def render_visual(self,refresh):
-		posx,posy = self.size,self.size
-		size_format = 80
-		x=size_format*posx
-		y=size_format*posy
 
-		screen = pygame.display.set_mode((x, y))
+		screen = pygame.display.set_mode((self.x, self.y))
 
 		screen.fill((255, 255, 255))
 
 		for i in range(self.size+1):
-			pygame.draw.line(screen, (128, 128, 128), (i*size_format, 0), (i*size_format, y))
-			pygame.draw.line(screen, (128, 128, 128), (0, i*size_format), (x, i*size_format))
+			pygame.draw.line(screen, (128, 128, 128), (i*self.size_format, 0), (i*self.size_format, self.y))
+			pygame.draw.line(screen, (128, 128, 128), (0, i*self.size_format), (self.x, i*self.size_format))
 
-		for i in range(posx):
-			for j in range(posy):
+		for i in range(self.size):
+			for j in range(self.size):
 				if((i,j) in self.obstacles):
-					pygame.draw.rect(screen,(0,0,0),(j*size_format,(self.size-i-1)*size_format,size_format,size_format))
+					pygame.draw.rect(screen,(0,0,0),(j*self.size_format,(self.size-i-1)*self.size_format,self.size_format,self.size_format))
 
-		pygame.draw.rect(screen,(0,255,0),(0,(size_format*self.size)-size_format,size_format,size_format))
-		pygame.draw.rect(screen,(255,0,0),((size_format*self.size)-size_format,0,size_format,size_format))
+		for agent in self.agents:
+			pygame.draw.rect(screen,(0,255,0),(agent.origin[0]*self.size_format,(self.size-agent.origin[1]-1)*self.size_format,self.size_format,self.size_format))		
+		pygame.draw.rect(screen,(255,0,0),(self.goal_pos[0]*self.size_format,(self.size-self.goal_pos[1]-1)*self.size_format,self.size_format,self.size_format))
 
 		for agent in self.agents:
 			agent_x, agent_y = agent.pos
-			agent_x, agent_y = (self.size-agent_x-1)*size_format, agent_y*size_format
+			agent_x, agent_y = (self.size-agent_x-1)*self.size_format, agent_y*self.size_format
 			screen.blit(self.image, (agent_y,agent_x))
 		pygame.display.update()
 		sleep(refresh)
