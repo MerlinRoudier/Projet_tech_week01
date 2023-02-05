@@ -100,7 +100,8 @@ class Env(gym.Env):
 		self.reset()
 		for agent in self.agents:
 			agent.pos=agent.origin
-		while not self.has_ended():
+		stopped = False
+		while not self.has_ended() and not stopped:
 			for agent in self.agents:
 				action=agent.move()
 				new_pos	,reward, is_alive=self.step(agent.pos, action)
@@ -108,6 +109,8 @@ class Env(gym.Env):
 					agent.pos=new_pos
 			self.time+=1
 			self.render()
+			stopped = self.quit()
+
 
 	def train(self, num_agent=0, nb_i=1000):
 		agent=self.agents[num_agent]
@@ -143,4 +146,15 @@ class Env(gym.Env):
 		else:
 			reward=-1
 		return new_pos, reward, is_alive
+	
+	def quit(self):
+		if self.rendering == 'visual':
+			for event in pygame.event.get():
+				if event.type == pygame.QUIT:
+					pygame.display.quit()                
+					pygame.quit()
+					return True
+			return False
+		
+		
 
