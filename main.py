@@ -26,5 +26,6 @@ o=set_obstacles(o,10)
 env=Env(obstacles=o,size=25,rendering='visual', goal_pos=(24,24), timeout=1500)
 env.add_agent('rl')
 env.train()
+#env.agents[0].save_q_table()
 env.start()
 

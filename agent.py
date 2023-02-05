@@ -1,4 +1,6 @@
 import torch
+from uuid import uuid4
+
 
 class basicAgent:
 	def __init__(self, pos):
@@ -36,7 +38,7 @@ class RLAgent:
 		self.alpha*(reward+self.gamma*torch.max(self.q_table[:,new_pos[0],new_pos[1]]))
 
 	def save_q_table(self):
-		torch.save(self.q_table, "q_table.pt")
+		torch.save(self.q_table, str(uuid4())+"_q_table.pt")
 	
 	def load_q_table(self):
 		self.q_table = torch.load("q_table.pt")
