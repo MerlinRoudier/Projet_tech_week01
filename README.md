@@ -10,5 +10,5 @@ We defined four types of agent:
 - RL
 - LRL
 
-The basic agent follow a single type of behaviour: he goes up until he can't anymore, then he move to the right. For each movement the agent will be rewarded by a negative value (-1), and by a +1000 when he arrives at the end.
-The random agent
+The basic agent follows a single type of behaviour: he goes up until he can't anymore, then he move to the right. For each movement the agent will be rewarded by a negative value (-1), and by a +1000 when he arrives at the end.
+The random agent follows a purely random behaviour.
