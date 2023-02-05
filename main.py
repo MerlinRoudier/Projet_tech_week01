@@ -9,7 +9,7 @@ def set_obstacles(s,size):
             if t[size*i+j]=='O':
                 o+=[(i,j)]
     return o
-
+#
 o='\
 * * * * * O * * * * \
 O * * * * O * O * * \

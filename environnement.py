@@ -24,7 +24,7 @@ class Env(gym.Env):
 		}
 
 		# REQUIRED FOR THE RENDER VISUAL, ONLY REQUIRED TO INITIALIZE ONCE
-		self.x,self.y = 900,900 # static pixels size for the window
+		self.x,self.y = 500,500 # static pixels size for the window
 		self.size_format = int(self.x/self.size) #dynamique
 		image = Image.open('robot.jpg')
 		n_image = image.resize((self.size_format,self.size_format))
@@ -144,7 +144,7 @@ class Env(gym.Env):
 			reward=-1e3
 			is_alive=False
 		else:
-			reward=-1
+			reward=0
 		return new_pos, reward, is_alive
 	
 	def quit(self):
