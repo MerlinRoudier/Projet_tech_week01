@@ -104,7 +104,7 @@ class Env(gym.Env):
 		while not self.has_ended() and not stopped:
 			for agent in self.agents:
 				action=agent.move()
-				new_pos	,reward, is_alive=self.step(agent.pos, action)
+				new_pos	, _, _ =self.step(agent.pos, action)
 				if self._is_valid(new_pos):
 					agent.pos=new_pos
 			self.time+=1
