@@ -35,6 +35,12 @@ class RLAgent:
 		(1-self.alpha)*self.q_table[action,self.pos[0],self.pos[1]] + \
 		self.alpha*(reward+self.gamma*torch.max(self.q_table[:,new_pos[0],new_pos[1]]))
 
+	def save_q_table(self):
+		torch.save(self.q_table, "q_table.pt")
+	
+	def load_q_table(self):
+		self.q_table = torch.load("q_table.pt")
+
 class LRLAgent:
 	def __init__(self, pos, size, alpha, gamma, epsilon):
 		self.pos=torch.tensor(pos)
@@ -52,6 +58,7 @@ class LRLAgent:
 	
 	def update(self, action, reward, new_pos):
 		return None
+
 
 def setup(typeAgent, pos, size, alpha, gamma, epsilon):
 	if typeAgent=='basic':
