@@ -78,8 +78,8 @@ def Maze():
         return liste
 
     n=1
-    p=0.5 #Plus p augmente, plus cela prends de temps à l'entrainer et il a moins de chance de trouver un chemin viable
-    size=5
+    p=0.3 #Plus p augmente, plus cela prends de temps à l'entrainer et il a moins de chance de trouver un chemin viable
+    size=4
 
     #np.random.seed(42)
     grid = np.random.binomial(n,p, size=(size,size))
@@ -87,7 +87,7 @@ def Maze():
     output = carve_maze(processed_grid, size)
     tab=conv(output,size)
 
-    tabVal=[(0,0),(14,14)]
+    tabVal=[(0,0),((3*size)-1,(3*size)-1)]
     a=random.randint(1,2)
     if(a==1):
         tabVal.append((0,1))
@@ -95,9 +95,9 @@ def Maze():
         tabVal.append((1,0))
     a=random.randint(1,2)
     if(a==1):
-        tabVal.append((13,14))
+        tabVal.append(((3*size)-2,(3*size)-1))
     else:
-        tabVal.append((14,13))
+        tabVal.append(((3*size)-1,(3*size)-2))
     for i in range(len(tabVal)):
         tab=estDansTableau1(tabVal[i],tab)
 
@@ -106,7 +106,7 @@ def Maze():
 o=Maze()
 
 
-env=Env(obstacles=o,size=15,rendering='visual', goal_pos=(14,14), timeout=5000)
+env=Env(obstacles=o,size=12,rendering='visual', goal_pos=(11,11), timeout=5000)
 env.add_agent('rl')
 env.train()
 env.start()
