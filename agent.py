@@ -5,6 +5,7 @@ from uuid import uuid4
 class basicAgent:
 	def __init__(self, pos):
 		self.pos=torch.tensor(pos)
+		self.origin=self.pos
 
 	def move(self,sim=None):
 		return 0 if self.pos[0]<9 else 1
@@ -13,6 +14,7 @@ class basicAgent:
 class randomAgent:
 	def __init__(self, pos):
 		self.pos=torch.tensor(pos)
+		self.origin=self.pos
 		
 	def move(self,sim=None):
 		return int(torch.randint(low=0, high=4, size=(1,)))
