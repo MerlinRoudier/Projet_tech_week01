@@ -112,21 +112,24 @@ class Env(gym.Env):
 			stopped = self.quit()
 
 
-	def train(self, num_agent=0, nb_i=1000):
+	def train(self, num_agent=0, nb_i=1000, immortal=False):
 		agent=self.agents[num_agent]
 		for _ in range(nb_i):
 			self.reset()
 			agent.pos=agent.origin
 			is_alive=True
-			while not self.has_ended(is_alive):
+			while not self.has_ended(is_alive): 
 				action=agent.move()
-				new_pos,reward, is_alive = self.step(agent.pos, action)
+				new_pos,reward, is_alive = self.step(agent.pos, action) 
+				self.time+=1
 				if(is_alive):
 					agent.update(action, reward, new_pos)
 					agent.pos=new_pos
-					self.time+=1
+					
 				else:
 					agent.update(action, reward, agent.pos)
+				if immortal:
+					is_alive=True
 
 	def reset(self):
 		self.time=0
@@ -147,6 +150,9 @@ class Env(gym.Env):
 			reward=0
 		return new_pos, reward, is_alive
 	
+
+		
+
 	def quit(self):
 		if self.rendering == 'visual':
 			for event in pygame.event.get():

@@ -23,9 +23,9 @@ O O O O * O O O * * \
 * * * * * * * O O *'
 o=set_obstacles(o,10)
 
-env=Env(obstacles=o, rendering='tty')
+env=Env(obstacles=o, rendering='tty', timeout= 50)
 env.add_agent('rl')
-env.train()
+env.train(immortal=True)
 #env.agents[0].save_q_table()
 env.start()
 
