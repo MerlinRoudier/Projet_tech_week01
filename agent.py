@@ -1,5 +1,6 @@
 import torch
 from uuid import uuid4
+from os import path, makedirs
 
 
 class basicAgent:
@@ -40,7 +41,8 @@ class RLAgent:
 		self.alpha*(reward+self.gamma*torch.max(self.q_table[:,new_pos[0],new_pos[1]]))
 
 	def save_q_table(self):
-		torch.save(self.q_table, str(uuid4())+"_q_table.pt")
+		if not path.isdir('q_table_saves'): makedirs('q_table_saves')
+		torch.save(self.q_table, path.join('q_table_saves', str(uuid4())+"_q_table.pt"))
 	
 	def load_q_table(self):
 		self.q_table = torch.load("q_table.pt")

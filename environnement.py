@@ -4,11 +4,10 @@ import pygame
 from time import sleep
 from agent import setup
 from PIL import Image
-import os
+from os import path
 
 class Env(gym.Env):
 	def __init__(self, size=10, timeout=1000, rendering='visual', goal_pos=(9,9), obstacles=[]):
-		pygame.init()
 		self.size=size
 		self.timeout=timeout
 		self.obstacles=obstacles
@@ -41,7 +40,7 @@ class Env(gym.Env):
 	def setup_visual(self):
 
 		# REQUIRED FOR THE RENDER VISUAL
-
+		pygame.init()
 		self.x,self.y = 500,500 # static pixels size for the window
 		self.size_format = int(self.x/self.size) #dynamic
 		self.image = []
@@ -50,7 +49,7 @@ class Env(gym.Env):
 		is_gen = False
 		for i in range(10):
 			try:
-				image = Image.open('./__pycache__/'+str(i)+'_robot.png')
+				image = Image.open(path.join('__pycache__', str(i)+'_robot.png'))
 			except:
 				is_gen=False
 				break
@@ -61,12 +60,12 @@ class Env(gym.Env):
 		#if the images aren't in the cache or well sized, we resize and regen
 		if not is_gen:
 			for i in range(10):
-				image = Image.open('./robots_img/'+str(i)+'_robot.png')
+				image = Image.open(path.join('robots_img',str(i)+'_robot.png'))
 				n_image = image.resize((self.size_format,self.size_format))
-				n_image.save('./__pycache__/'+str(i)+'_robot.png')
+				n_image.save(path.join('__pycache__',str(i)+'_robot.png'))
 				image.close()
 				n_image.close()
-				self.image.append(pygame.image.load('./__pycache__/'+str(i)+'_robot.png'))
+				self.image.append(pygame.image.load(path.join('__pycache__',str(i)+'_robot.png')))
 
 	def render_visual(self,refresh):
 

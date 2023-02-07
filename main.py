@@ -1,4 +1,3 @@
-import torch
 from environnement import Env
 
 def set_obstacles(s,size):
@@ -23,7 +22,7 @@ O O O O * O O O * * \
 * * * * * * * O O *'
 o=set_obstacles(o,10)
 
-env=Env(obstacles=o, rendering='tty')
+env=Env(obstacles=o, rendering='visual')
 env.add_agent('rl')
 env.train()
 env.agents[0].save_q_table()
