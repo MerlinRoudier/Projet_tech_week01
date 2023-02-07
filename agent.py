@@ -48,30 +48,30 @@ class LRLAgent:
 		self._pos=torch.tensor(pos)
 		self.origin=self.pos
 		self.size=size
-		self.states = torch.zeros(size*size)
-		self.weights = torch.rand(4, size*size)/100
+		self.states = torch.zeros(size*size).unsqueeze(0)
+		self.weights = torch.rand(size*size,4)/100
 		self.bias = torch.rand(4)/100
 		self.gamma=gamma
 		self.alpha=alpha
 		self.epsilon=epsilon
 
 	def update_s(self,new_pos):
-        self.states[self.pos[0]+self.size*self.pos[1]]=0
-        self.states[new_pos[0]+self.size*new_pos[1]]=1
+		self.states[0,self.pos[0]+self.size*self.pos[1]]=0
+		self.states[0,new_pos[0]+self.size*new_pos[1]]=1
 
 	@property
-    def pos(self):
-        return self._pos
+	def pos(self):
+		return self._pos
 
-    @pos.setter
-    def pos(self,new_pos):
-        self.update_s(new_pos)  
-        self._pos=new_pos
+	@pos.setter
+	def pos(self,new_pos):
+		self.update_s(new_pos)  
+		self._pos=new_pos
 	
 	def move(self):
 		if torch.rand(1)<self.epsilon:
 			return int(torch.randint(low=0,high=4, size=(1,)))
-		return int(torch.argmax(torch.tensordot(self.states,self.weights)+self.bias))
+		return int(torch.argmax(torch.tensordot(self.states,self.weights,dims=1)+self.bias))
 	
 	def update(self, action, reward, new_pos):
 		return None
@@ -84,5 +84,7 @@ def setup(typeAgent, pos, size, alpha, gamma, epsilon):
 		return randomAgent(pos)
 	elif typeAgent=='rl':
 		return RLAgent(pos, size, alpha,gamma,epsilon)
+	elif typeAgent=='lrl':
+		return LRLAgent(pos, size, alpha, gamma, epsilon)
 	else:
 		raise Exception("Invalid agent choice")
