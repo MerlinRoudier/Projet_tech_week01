@@ -20,7 +20,9 @@ The random agent follow a purely random behavior, selecting a random decision wh
 
 The RL (reinforcement learning) agent embed a Q-Table making him the first interesting agent to work with. He update its Q-Table using the Bellman Formula, is aware of rewards and need training iterations to properly update its Q-table (according to its learning rate, its discount rate, the reward etc.). Once trained in a specific environment, he is able to reach the goal position thanks to its Q-table making him converge toward the solution. Thus there exist some limitations to this approach. The RL agent can't find the goal position in a complex and big environment.  
 
-The LRL (Linear Reinforcement Learning) agent get rid of the Q-table by adding a layer of abstraction. 
+The LRL (Linear Reinforcement Learning) agent gets rid of the Q-table by adding a layer of abstraction. This abstraction will further be used to implement a neural network and generalizes the concept of evolving through different environments. This agent will also be aware of the rewards and requires a training.
+
+Training will consist of iterations. During an iteration we let an agent evolve in an environment and use rewards to guide himself toward the goal position. The agent will have a defined number of maximum steps to do. If this maximum is reached, or the goal position is reached or even if the agent hit a wall (including getting out of the environment), the Q-table is updated and the iteration end.
 
 ---
 
@@ -61,7 +63,7 @@ We are still currently working on this project, here are the unordered different
 
 ## Disclaimer
 
-the software is provided "as is", without warranty of any kind, express or implied, including but not limited to the warranties of merchantability, fitness for a particular purpose and noninfringement. In no event shall the authors or copyright holders be liable for any claim, damages or other liability, whether in an action of contract, tort or otherwise, arising from, out of or in connection with the software or the use or other dealings in the software.
+The software is provided "as is", without warranty of any kind, express or implied, including but not limited to the warranties of merchantability, fitness for a particular purpose and noninfringement. In no event shall the authors or copyright holders be liable for any claim, damages or other liability, whether in an action of contract, tort or otherwise, arising from, out of or in connection with the software or the use or other dealings in the software.
 
 --- 
 
