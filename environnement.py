@@ -147,8 +147,7 @@ class Env(gym.Env):
 			is_alive=True
 			while not self.has_ended(is_alive): 
 				action=agent.move()
-				new_pos,reward, is_alive = self.step(agent.pos, action) 
-				self.time+=1
+				new_pos,reward, is_alive = self.step(agent.pos, action)
 				if(is_alive):
 					agent.update(action, reward, new_pos)
 					agent.pos=new_pos
@@ -177,7 +176,39 @@ class Env(gym.Env):
 			reward=0
 		return new_pos, reward, is_alive
 	
-
+	def gen_maze(self,pos=(0,0)):
+		maze=torch.ones(self.size+1,self.size+1)
+		search=[(pos[0]+1,pos[1]+1)]
+		path=set()
+		goal_pos=search[0]
+		while search:
+			pos=search[-1]
+			maze[pos]=0
+			verif=True
+			tries=4
+			while tries and verif:
+				rand=int(torch.randint(0,tries,size=(1,)))
+				new_pos=(pos[0]+self._action_to_direction[rand][0],\
+				pos[1]+self._action_to_direction[rand][1])
+				x,y=pos
+				if rand==0:
+					sight=maze[x+1:x+3,y-1:y+2]
+				elif rand==1:
+					sight=maze[x-1:x+2,y+1:y+3]
+				elif rand==2:
+					sight=maze[x-2:x,y-1:y+2]
+				else:
+					sight=maze[x-1:x+2,y-2:y]
+				if self._is_valid(new_pos) and sight.sum()>=6 and not new_pos in path:
+					search.append(new_pos)
+					path.add(new_pos)
+					verif=False
+				tries-=1
+			if verif:
+				goal_pos=max(goal_pos,search.pop(-1))
+		self.obstacles=[(i-1,j-1) for i in range(1,self.size+1) for j in range(1,self.size+1) if maze[i,j]==1]
+		self.goal_pos=torch.tensor((goal_pos[0]-1,goal_pos[1]-1))
+				
 		
 
 	def quit(self):
