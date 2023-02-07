@@ -4,10 +4,10 @@ import pygame
 from time import sleep
 from agent import setup
 from PIL import Image
+from os import path
 
 class Env(gym.Env):
 	def __init__(self, size=10, timeout=1000, rendering='visual', goal_pos=(9,9), obstacles=[]):
-		pygame.init()
 		self.size=size
 		self.timeout=timeout
 		self.obstacles=obstacles
@@ -22,15 +22,7 @@ class Env(gym.Env):
 			2: torch.tensor((-1,0)),
 			3: torch.tensor((0,-1)),
 		}
-
-		# REQUIRED FOR THE RENDER VISUAL, ONLY REQUIRED TO INITIALIZE ONCE
-		self.x,self.y = 500,500 # static pixels size for the window
-		self.size_format = int(self.x/self.size) #dynamique
-		image = Image.open('robot.jpg')
-		n_image = image.resize((self.size_format,self.size_format))
-		n_image.save('robot.jpg')
-
-		self.image=pygame.image.load("robot.jpg")
+		if rendering=='visual': self.setup_visual()
 
 
 	def add_agent(self,typeAgent='basic', pos=(0,0), alpha=.85, gamma=.3, epsilon=.01):
@@ -43,6 +35,37 @@ class Env(gym.Env):
 			if torch.equal(agent.pos, self.goal_pos):
 				return True
 		return False
+
+
+	def setup_visual(self):
+
+		# REQUIRED FOR THE RENDER VISUAL
+		pygame.init()
+		self.x,self.y = 500,500 # static pixels size for the window
+		self.size_format = int(self.x/self.size) #dynamic
+		self.image = []
+
+		#checking if images are generated in the cache for the designed matrix size and screen size 
+		is_gen = False
+		for i in range(10):
+			try:
+				image = Image.open(path.join('__pycache__', str(i)+'_robot.png'))
+			except:
+				is_gen=False
+				break
+			if image.size[0] == image.size[1] and image.size != self.size_format:
+				is_gen=False
+				image.close()
+
+		#if the images aren't in the cache or well sized, we resize and regen
+		if not is_gen:
+			for i in range(10):
+				image = Image.open(path.join('robots_img',str(i)+'_robot.png'))
+				n_image = image.resize((self.size_format,self.size_format))
+				n_image.save(path.join('__pycache__',str(i)+'_robot.png'))
+				image.close()
+				n_image.close()
+				self.image.append(pygame.image.load(path.join('__pycache__',str(i)+'_robot.png')))
 
 	def render_visual(self,refresh):
 
@@ -63,12 +86,16 @@ class Env(gym.Env):
 			pygame.draw.rect(screen,(0,255,0),(agent.origin[0]*self.size_format,(self.size-agent.origin[1]-1)*self.size_format,self.size_format,self.size_format))		
 		pygame.draw.rect(screen,(255,0,0),(self.goal_pos[0]*self.size_format,(self.size-self.goal_pos[1]-1)*self.size_format,self.size_format,self.size_format))
 
-		for agent in self.agents:
-			agent_x, agent_y = agent.pos
+
+
+
+		for i in range(len(self.agents)):
+			agent_x, agent_y = self.agents[i].pos
 			agent_x, agent_y = (self.size-agent_x-1)*self.size_format, agent_y*self.size_format
-			screen.blit(self.image, (agent_y,agent_x))
+			screen.blit(self.image[i%10], (agent_y,agent_x))
 		pygame.display.update()
 		sleep(refresh)
+
 
 	def render_tty(self, refresh):
 		s=''

@@ -1,10 +1,12 @@
 import torch
 from uuid import uuid4
+from os import path, makedirs
 
 
 class basicAgent:
 	def __init__(self, pos):
 		self.pos=torch.tensor(pos)
+		self.origin=self.pos
 
 	def move(self,sim=None):
 		return 0 if self.pos[0]<9 else 1
@@ -13,6 +15,7 @@ class basicAgent:
 class randomAgent:
 	def __init__(self, pos):
 		self.pos=torch.tensor(pos)
+		self.origin=self.pos
 		
 	def move(self,sim=None):
 		return int(torch.randint(low=0, high=4, size=(1,)))
@@ -38,7 +41,8 @@ class RLAgent:
 		self.alpha*(reward+self.gamma*torch.max(self.q_table[:,new_pos[0],new_pos[1]]))
 
 	def save_q_table(self):
-		torch.save(self.q_table, str(uuid4())+"_q_table.pt")
+		if not path.isdir('q_table_saves'): makedirs('q_table_saves')
+		torch.save(self.q_table, path.join('q_table_saves', str(uuid4())+"_q_table.pt"))
 	
 	def load_q_table(self):
 		self.q_table = torch.load("q_table.pt")
