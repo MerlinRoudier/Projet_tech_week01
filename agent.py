@@ -6,7 +6,7 @@ class basicAgent:
 	def __init__(self, pos):
 		self.pos=torch.tensor(pos)
 
-	def move(self):
+	def move(self,sim=None):
 		return 0 if self.pos[0]<9 else 1
 
 
@@ -14,7 +14,7 @@ class randomAgent:
 	def __init__(self, pos):
 		self.pos=torch.tensor(pos)
 		
-	def move(self):
+	def move(self,sim=None):
 		return int(torch.randint(low=0, high=4, size=(1,)))
 
 
@@ -27,8 +27,8 @@ class RLAgent:
 		self.alpha=alpha
 		self.epsilon=epsilon
 
-	def move(self):
-		if torch.rand(1)<self.epsilon:
+	def move(self,sim=False):
+		if not sim and torch.rand(1)<self.epsilon:
 			return int(torch.randint(low=0,high=4, size=(1,)))
 		return int(torch.argmax(self.q_table[:,self.pos[0], self.pos[1]]))
         	
@@ -68,8 +68,8 @@ class LRLAgent:
 		self.update_s(new_pos)  
 		self._pos=new_pos
 	
-	def move(self):
-		if torch.rand(1)<self.epsilon:
+	def move(self,sim=False):
+		if not sim and torch.rand(1)<self.epsilon:
 			return int(torch.randint(low=0,high=4, size=(1,)))
 		return int(torch.argmax(torch.tensordot(self.states,self.weights,dims=1)+self.bias))
 	

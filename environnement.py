@@ -103,7 +103,7 @@ class Env(gym.Env):
 		stopped = False
 		while not self.has_ended() and not stopped:
 			for agent in self.agents:
-				action=agent.move()
+				action=agent.move(True)
 				new_pos	, _, _ =self.step(agent.pos, action)
 				if self._is_valid(new_pos):
 					agent.pos=new_pos
