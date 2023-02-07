@@ -45,18 +45,33 @@ class RLAgent:
 
 class LRLAgent:
 	def __init__(self, pos, size, alpha, gamma, epsilon):
-		self.pos=torch.tensor(pos)
+		self._pos=torch.tensor(pos)
+		self.origin=self.pos
 		self.size=size
+		self.states = torch.zeros(size*size)
 		self.weights = torch.rand(4, size*size)/100
 		self.bias = torch.rand(4)/100
 		self.gamma=gamma
 		self.alpha=alpha
 		self.epsilon=epsilon
+
+	def update_s(self,new_pos):
+        self.states[self.pos[0]+self.size*self.pos[1]]=0
+        self.states[new_pos[0]+self.size*new_pos[1]]=1
+
+	@property
+    def pos(self):
+        return self._pos
+
+    @pos.setter
+    def pos(self,new_pos):
+        self.update_s(new_pos)  
+        self._pos=new_pos
 	
 	def move(self):
 		if torch.rand(1)<self.epsilon:
 			return int(torch.randint(low=0,high=4, size=(1,)))
-		return int(torch.argmax(self.weights[:,self.pos[0]*self.size+self.pos[1]]+self.bias))
+		return int(torch.argmax(torch.tensordot(self.states,self.weights)+self.bias))
 	
 	def update(self, action, reward, new_pos):
 		return None
