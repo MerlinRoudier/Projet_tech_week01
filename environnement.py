@@ -147,6 +147,7 @@ class Env(gym.Env):
 			agent.pos=agent.origin
 			is_alive=True
 			#print(f" origin features: {agent.features}")
+			c=0
 			while not self.has_ended(is_alive): 
 				action=agent.move()
 				new_pos,reward, is_alive = self.step(agent, agent.pos, action)
@@ -159,7 +160,10 @@ class Env(gym.Env):
 					agent.update(action, reward, agent.pos)
 				if immortal:
 					is_alive=True
-			print("killed")
+				c+=1
+			print(agent.weights)
+			print(f"killed after {c} tries")
+
 
 	def reset(self):
 		self.time=0
@@ -171,16 +175,12 @@ class Env(gym.Env):
 		is_alive=True
 		new_pos=pos+self._action_to_direction[action]
 		if(type(agent) == LRLAgent):
-			agent.update_features(new_pos)
-			features=agent.features
-			#print("features: ",features)
-			if torch.equal(new_pos,self.goal_pos): reward=1000
-			else: reward=float(torch.sum(features*torch.tensor((-1,-0.5,0.1))))
-			#print(f"reward: {reward}")
+			features = agent.update_features(new_pos)
+			#if torch.equal(new_pos,self.goal_pos): reward=1000
+			#else: 
+			reward=float(torch.sum(features*torch.tensor((1,1,1))))
 			if not self._is_valid(new_pos):
 				is_alive=False
-				agent.dico = {}
-				agent.features[2] = 0 
 		else:
 			if torch.equal(new_pos,self.goal_pos):
 				reward=1e3
