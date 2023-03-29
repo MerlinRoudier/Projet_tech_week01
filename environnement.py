@@ -167,20 +167,17 @@ class Env(gym.Env):
 	def _is_valid(self, pos):
 		return ((pos[0]>=0 and pos[0]<self.size) and (pos[1]>=0 and pos[1]<self.size)) and (tuple(pos) not in self.obstacles)
 	
+	def manhattan(self,pos):
+		return int(self.goal_pos[0]-pos[0]+self.goal_pos[1]-pos[1])
+
 	def step(self, agent, pos, action):
 		is_alive=True
 		new_pos=pos+self._action_to_direction[action]
 		if(type(agent) == LRLAgent):
-			agent.update_features(new_pos)
-			features=agent.features
-			#print("features: ",features)
-			if torch.equal(new_pos,self.goal_pos): reward=1000
-			else: reward=float(torch.sum(features*torch.tensor((-1,-0.5,0.1))))
-			#print(f"reward: {reward}")
+			if torch.equal(new_pos,self.goal_pos): reward=100
+			else: reward=-self.manhattan(new_pos)
 			if not self._is_valid(new_pos):
 				is_alive=False
-				agent.dico = {}
-				agent.features[2] = 0 
 		else:
 			if torch.equal(new_pos,self.goal_pos):
 				reward=1e3
@@ -190,42 +187,7 @@ class Env(gym.Env):
 				is_alive=False
 			else:
 				reward=0
-		return new_pos, reward, is_alive
-	
-	def gen_maze(self,pos=(0,0)):
-		maze=torch.ones(self.size+1,self.size+1)
-		search=[(pos[0]+1,pos[1]+1)]
-		path=set()
-		goal_pos=search[0]
-		while search:
-			pos=search[-1]
-			maze[pos]=0
-			verif=True
-			tries=4
-			while tries and verif:
-				rand=int(torch.randint(0,tries,size=(1,)))
-				new_pos=(pos[0]+self._action_to_direction[rand][0],\
-				pos[1]+self._action_to_direction[rand][1])
-				x,y=pos
-				if rand==0:
-					sight=maze[x+1:x+3,y-1:y+2]
-				elif rand==1:
-					sight=maze[x-1:x+2,y+1:y+3]
-				elif rand==2:
-					sight=maze[x-2:x,y-1:y+2]
-				else:
-					sight=maze[x-1:x+2,y-2:y]
-				if self._is_valid(new_pos) and sight.sum()>=6 and not new_pos in path:
-					search.append(new_pos)
-					path.add(new_pos)
-					verif=False
-				tries-=1
-			if verif:
-				goal_pos=max(goal_pos,search.pop(-1))
-		self.obstacles=[(i-1,j-1) for i in range(1,self.size+1) for j in range(1,self.size+1) if maze[i,j]==1]
-		self.goal_pos=torch.tensor((goal_pos[0]-1,goal_pos[1]-1))
-				
-		
+		return new_pos, reward, is_alive	
 
 	def quit(self):
 		if self.rendering == 'visual':
