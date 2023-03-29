@@ -57,7 +57,6 @@ class LRLAgent:
 		self.gamma=gamma
 		self.alpha=alpha
 		self.epsilon=epsilon
-		self.dico={pos:0}
 
 		x1 = self.size-pos[0]
 		x2 = self.size-pos[1]
