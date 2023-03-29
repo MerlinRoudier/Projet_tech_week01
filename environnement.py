@@ -5,6 +5,7 @@ from time import sleep
 from agent import setup
 from PIL import Image
 from os import path
+from agent import LRLAgent
 
 class Env(gym.Env):
 	def __init__(self, size=10, timeout=1000, rendering='visual', goal_pos=(9,9), obstacles=[]):
@@ -131,7 +132,7 @@ class Env(gym.Env):
 		while not self.has_ended() and not stopped:
 			for agent in self.agents:
 				action=agent.move(True)
-				new_pos	, _, _ =self.step(agent.pos, action)
+				new_pos	, _, _ =self.step(agent,agent.pos, action)
 				if self._is_valid(new_pos):
 					agent.pos=new_pos
 			self.time+=1
@@ -145,17 +146,20 @@ class Env(gym.Env):
 			self.reset()
 			agent.pos=agent.origin
 			is_alive=True
+			#print(f" origin features: {agent.features}")
 			while not self.has_ended(is_alive): 
 				action=agent.move()
-				new_pos,reward, is_alive = self.step(agent.pos, action)
+				new_pos,reward, is_alive = self.step(agent, agent.pos, action)
 				if(is_alive):
 					agent.update(action, reward, new_pos)
 					agent.pos=new_pos
+					print(agent.pos,reward)
 					
 				else:
 					agent.update(action, reward, agent.pos)
 				if immortal:
 					is_alive=True
+			print("killed")
 
 	def reset(self):
 		self.time=0
@@ -163,17 +167,29 @@ class Env(gym.Env):
 	def _is_valid(self, pos):
 		return ((pos[0]>=0 and pos[0]<self.size) and (pos[1]>=0 and pos[1]<self.size)) and (tuple(pos) not in self.obstacles)
 	
-	def step(self, pos, action):
+	def step(self, agent, pos, action):
 		is_alive=True
 		new_pos=pos+self._action_to_direction[action]
-		if torch.equal(new_pos,self.goal_pos):
-			reward=1e3
-			is_alive=False
-		elif not self._is_valid(new_pos):
-			reward=-1e3
-			is_alive=False
+		if(type(agent) == LRLAgent):
+			agent.update_features(new_pos)
+			features=agent.features
+			#print("features: ",features)
+			if torch.equal(new_pos,self.goal_pos): reward=1000
+			else: reward=float(torch.sum(features*torch.tensor((-1,-0.5,0.1))))
+			#print(f"reward: {reward}")
+			if not self._is_valid(new_pos):
+				is_alive=False
+				agent.dico = {}
+				agent.features[2] = 0 
 		else:
-			reward=0
+			if torch.equal(new_pos,self.goal_pos):
+				reward=1e3
+				is_alive=False
+			elif not self._is_valid(new_pos):
+				reward=-1
+				is_alive=False
+			else:
+				reward=0
 		return new_pos, reward, is_alive
 	
 	def gen_maze(self,pos=(0,0)):

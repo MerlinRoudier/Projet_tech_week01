@@ -21,11 +21,11 @@ O O O O * O O O * * \
 * O O O O O * O * * \
 * * * * * * * O O *'
 #o=set_obstacles(o,10)
-goal_pos=(17,17)
-env=Env(size=20, rendering='visual')
-env.add_agent('rl')
-env.gen_maze()
-env.train()
+goal_pos=(4,4)
+env=Env(size=5, rendering='visual', goal_pos=goal_pos)
+env.add_agent(typeAgent='lrl', alpha=.25, gamma=.1, epsilon=.3)
+#env.gen_maze()
+env.train(nb_i=500)
 #env.agents[0].save_q_table()
 env.start()
 
