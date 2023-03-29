@@ -50,7 +50,7 @@ O O O O * O O O * * \
 #o=set_obstacles(o,10)
 goal_pos=(4,4)
 env=Env(size=5, rendering='visual', goal_pos=goal_pos)
-env.add_agent(typeAgent='lrl', alpha=.35, gamma=.1, epsilon=.3)
+env.add_agent(typeAgent='lrl', alpha=.30, gamma=.1, epsilon=.3)
 #env.gen_maze()
 decisionMapping(env.agents[0], 5, (4,4), (0,0))
 env.train(nb_i=500)

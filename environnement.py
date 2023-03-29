@@ -176,9 +176,8 @@ class Env(gym.Env):
 		new_pos=pos+self._action_to_direction[action]
 		if(type(agent) == LRLAgent):
 			features = agent.update_features(new_pos)
-			#if torch.equal(new_pos,self.goal_pos): reward=1000
-			#else: 
-			reward=float(torch.sum(features*torch.tensor((1,1,1))))
+			if torch.equal(new_pos,self.goal_pos): reward=float(torch.sum(features*torch.tensor((1,1,1))))*10
+			else: reward=float(torch.sum(features*torch.tensor((1,1,1))))
 			if not self._is_valid(new_pos):
 				is_alive=False
 		else:

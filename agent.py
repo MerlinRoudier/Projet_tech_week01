@@ -64,8 +64,10 @@ class LRLAgent:
 		self.features = torch.tensor((x1,x2,x1+x2), dtype=torch.float)
 	
 	def move(self,sim=False):
+		if sim: self.features = self.update_features(self.pos)
 		result = torch.matmul(self.weights, self.features)
 		if not sim and torch.rand(1)<self.epsilon:
+			print("epsilon triggered")
 			return int(torch.randint(low=0,high=4, size=(1,)))
 		action=int(torch.argmax(result))
 		return action
