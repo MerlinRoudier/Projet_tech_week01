@@ -65,6 +65,7 @@ class RLAgent:
     def load_q_table(self):
         self.q_table = torch.load("q_table.pt")
 
+
 class LRLAgent:
     def __init__(self, pos, size, alpha, gamma, epsilon):
         self.pos = torch.tensor(pos)
@@ -78,16 +79,17 @@ class LRLAgent:
 
         x1 = self.size - pos[0]
         x2 = self.size - pos[1]
-        self.features = torch.tensor((x1, x2, x1 + x2), dtype = torch.float)
-    
-    def move(self,sim=False):
-        if sim: self.features = self.update_features(self.pos)
+        self.features = torch.tensor((x1, x2, x1+x2), dtype=torch.float)
+
+    def move(self, sim=False):
+        if sim:
+            self.features = self.update_features(self.pos)
         result = torch.matmul(self.weights, self.features)
         if not sim and torch.rand(1) < self.epsilon:
-            return int(torch.randint(low = 0, high = 4, size = (1,)))
-        action =  int(torch.argmax(result))
+            return int(torch.randint(low=0, high=4, size=(1,)))
+        action = int(torch.argmax(result))
         return action
-    
+
     def update_features(self, new_state):
         # copy the attributes
         features = self.features.clone().detach()
@@ -101,15 +103,19 @@ class LRLAgent:
     def update(self, action, reward, new_state):
         formerMax = torch.max(torch.matmul(self.weights, self.features))
         self.features = self.update_features(new_state)
-        currentMax = torch.max(torch.matmul(self.weights, self.features)) 
+        currentMax = torch.max(torch.matmul(self.weights, self.features))
         for i in range(len(self.weights[action])):
-            self.weights[action][i] = self.weights[action][i] + self.alpha * (reward+self.gamma*currentMax-formerMax) * float((self.features[i]))
+            self.weights[action][i] = \
+                self.weights[action][i] + \
+                self.alpha * (reward+self.gamma*currentMax-formerMax) * \
+                float((self.features[i]))
 
-    
     def reward(self, new_pos, goal_pos, isValid):
         features = self.update_features(new_pos)
-        if torch.equal(new_pos,goal_pos): return float(torch.sum(features*torch.tensor((1,1,1))))*10
-        else: return float(torch.sum(features*torch.tensor((1,1,1))))
+        if torch.equal(new_pos, goal_pos):
+            return float(torch.sum(features*torch.tensor((1, 1, 1))))*10
+        else:
+            return float(torch.sum(features*torch.tensor((1, 1, 1))))
 
 
 def setup(typeAgent, pos, size, alpha, gamma, epsilon):
@@ -118,10 +124,8 @@ def setup(typeAgent, pos, size, alpha, gamma, epsilon):
     elif typeAgent == 'random':
         return randomAgent(pos)
     elif typeAgent == 'rl':
-        return RLAgent(pos, size, alpha,gamma,epsilon)
+        return RLAgent(pos, size, alpha, gamma, epsilon)
     elif typeAgent == 'lrl':
         return LRLAgent(pos, size, alpha, gamma, epsilon)
     else:
         raise Exception("Invalid agent choice")
-    
-    

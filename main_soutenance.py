@@ -30,7 +30,7 @@ input()
 RLEnvBigMaze=Env()
 RLEnvBigMaze.gen_maze()
 RLEnvBigMaze.add_agent(typeAgent='rl')
-RLEnvBigMaze.agents[0].load_q_table()
+RLEnvBigMaze.agents[0].load_q_table('q_table.pt//')
 RLEnvBigMaze.start()
 
 input()
