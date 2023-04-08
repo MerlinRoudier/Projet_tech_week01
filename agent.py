@@ -7,6 +7,7 @@ class basicAgent:
     def __init__(self, pos: tuple) -> None:
         self.pos = torch.tensor(pos)
         self.origin = self.pos
+        self.ISACTIVE = False
 
     def move(self, sim: bool = False) -> int:
         return 0 if self.pos[0] < 9 else 1
@@ -19,6 +20,7 @@ class randomAgent:
     def __init__(self, pos: tuple) -> None:
         self.pos = torch.tensor(pos)
         self.origin = self.pos
+        self.ISACTIVE = False
 
     def move(self, sim: bool = False) -> int:
         return int(torch.randint(low=0, high=4, size=(1,)))
@@ -40,6 +42,7 @@ class RLAgent:
         self.gamma = gamma
         self.alpha = alpha
         self.epsilon = epsilon
+        self.ISACTIVE=True
 
     def move(self, sim: bool = False) -> int:
         if not sim and torch.rand(1) < self.epsilon:
@@ -89,6 +92,7 @@ class LRLAgent:
         self.gamma = gamma
         self.alpha = alpha
         self.epsilon = epsilon
+        self.ISACTIVE=True
 
         x1 = self.size - pos[0]
         x2 = self.size - pos[1]

@@ -5,7 +5,6 @@ from time import sleep
 from agent import setup
 from PIL import Image
 from os import path
-from agent import LRLAgent
 
 
 class Env(gym.Env):
@@ -182,6 +181,20 @@ class Env(gym.Env):
                     agent.update(action, reward, agent.pos)
                 if immortal:
                     is_alive = True
+    
+    def train_all(self,
+                  nb_i: tuple = (),
+                  immortal: tuple = ()) -> None:
+        activeAgentNbr = len([a for a in self.agent if a.ISACTIVE])
+        if len(nb_i) != activeAgentNbr:
+            nb_i=(1000,)*activeAgentNbr
+        if len(immortal) != activeAgentNbr:
+            immortal = (False,)*activeAgentNbr
+        activeCounter = 0
+        for i in range(len(self.agents)):
+            if self.agents[i].ISACTIVE:
+                self.train(i, nb_i[activeCounter], immortal[activeCounter])
+                activeCounter+=1
 
     def reset(self) -> None:
         self.time = 0
