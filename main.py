@@ -38,13 +38,13 @@ def decisionMapping(agent: agent.LRLAgent, size: int, goalpos : tuple, startpos:
 
 o='\
 * * * * * O * * * * \
-O O O O * O * O * * \
+O O O O * * * O * * \
 * O * O * O O O O * \
 * * * * * * * O * * \
 O O O O * O O O * * \
 * * * * * O * * * * \
 * O O * O O * O * * \
-* O * * * O * O O * \
+* O * * * * * O O * \
 * O O O O O * O * * \
 * * * * * * * O O *'
 #o=set_obstacles(o,10)
