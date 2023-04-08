@@ -11,21 +11,25 @@ def set_obstacles(s,size):
 
 o='\
 * * * * * O * * * * \
-O O O O * O * O * * \
+O O O O * * * O * * \
 * O * O * O O O O * \
 * * * * * * * O * * \
 O O O O * O O O * * \
 * * * * * O * * * * \
 * O O * O O * O * * \
-* O * * * O * O O * \
+* O * * * * * O O * \
 * O O O O O * O * * \
 * * * * * * * O O *'
-#o=set_obstacles(o,10)
-goal_pos=(4,4)
-env=Env(size=5, rendering='visual', goal_pos=goal_pos)
-env.add_agent(typeAgent='lrl', alpha=.25, gamma=.1, epsilon=.3)
+o=set_obstacles(o,10)
+goal_pos=(9,9)
+env=Env(size=10, rendering='visual', goal_pos=goal_pos, obstacles=o)
+env.add_agent(typeAgent='random')
+env.add_agent(typeAgent='random')
+env.add_agent(typeAgent='random')
+env.add_agent(typeAgent='random')
+#env.add_agent(typeAgent='rl')
 #env.gen_maze()
-env.train(nb_i=500)
+#env.train(num_agent=1, nb_i=1000)
 #env.agents[0].save_q_table()
 env.start()
 

@@ -111,13 +111,9 @@ class LRLAgent:
 
 		#sauvegarder les poids ailleurs pour la MAJ
 		currentMax = torch.max(torch.matmul(self.weights, self.features)) #/self.features.norm()
-		print("diff: ",self.gamma*currentMax-formerMax)
 		for i in range(len(self.weights[action])):
 			self.weights[action][i] = self.weights[action][i]+self.alpha*(reward+self.gamma*currentMax-formerMax)*float((self.features[i])/self.features.norm())
-			#print(f"feature {i}: {self.features[i]}")
-			#print("norm: ",float(self.features[i]/self.features.norm()))
-		#print("inside alpha", (reward+self.gamma*currentMax-formerMax))
-		print(self.weights)
+
 
 
 def setup(typeAgent, pos, size, alpha, gamma, epsilon):
