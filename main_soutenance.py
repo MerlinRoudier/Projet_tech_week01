@@ -1,41 +1,63 @@
 from environnement import Env
+from lab import obstacles,goal_pos
 
-basicEnv=Env()
-basicEnv.add_agent(typeAgent='basic')
-basicEnv.start()
+def simulation(nb_env):
+    match nb_env:
+        case 0:
+            basicEnv=Env()
+            basicEnv.add_agent(typeAgent='basic')
+            basicEnv.start()
 
-input()
+        case 1:
+            randomEnv=Env(size=11,timeout=20, goal_pos=(10,10))
+            randomEnv.add_agent(typeAgent='random', pos=(5,5))
+            randomEnv.start()
 
-randomEnv=Env(size=11,timeout=20, goal_pos=(10,10))
-randomEnv.add_agent(typeAgent='random', pos=(5,5))
-randomEnv.start()
+        case 2:
+            RLEnv=Env()
+            RLEnv.add_agent('rl')
+            RLEnv.train()
+            RLEnv.start()
 
-input()
+        case 3:
+            MultiEnv=Env()
+            MultiEnv.add_agent('rl')
+            MultiEnv.add_agent('basic')
+            MultiEnv.add_agent('random')
+            MultiEnv.train()
+            MultiEnv.start()
 
-RLEnv=Env()
-RLEnv.add_agent(typeAgent='rl')
-RLEnv.train()
-RLEnv.start()
+        case 4:
+            RLEnvMaze=Env()
+            RLEnvMaze.gen_maze()
+            RLEnvMaze.add_agent(typeAgent='rl')
+            RLEnvMaze.train()
+            RLEnvMaze.start()
 
-input()
+        case 5:
+            RLEnvBigMaze=Env(size=30,goal_pos=goal_pos)
+            RLEnvBigMaze.obstacles=obstacles
+            RLEnvBigMaze.add_agent(typeAgent='rl')
+            RLEnvBigMaze.agents[0].load_q_table()
+            RLEnvBigMaze.start()
 
-RLEnvMaze=Env()
-RLEnvMaze.gen_maze()
-RLEnvMaze.add_agent(typeAgent='rl')
-RLEnvMaze.train()
-RLEnvMaze.start()
+        case 6:
+            LRLEnv=Env(size=5, goal_pos=(4,4), timeout=20)
+            LRLEnv.add_agent(typeAgent='lrl', alpha=.3, gamma=.1, epsilon=.3)
+            LRLEnv.train(nb_i=1000)
+            LRLEnv.start()
 
-input()
+i=int(input())
+while i<7:
+   simulation(i)
+   i=int(input())
 
-RLEnvBigMaze=Env()
-RLEnvBigMaze.gen_maze()
-RLEnvBigMaze.add_agent(typeAgent='rl')
-RLEnvBigMaze.agents[0].load_q_table('q_table.pt//')
-RLEnvBigMaze.start()
-
-input()
-
-LRLEnv=Env()
-LRLEnv.add_agent(typeAgent='lrl', alpha=.3, gamma=.1, epsilon=.3)
-LRLEnv.train()
-LRLEnv.start()
+# env=Env(size=50)
+# env.gen_maze()
+# with open("lab3.py","w") as f:
+#     f.write("obstacles="+str(env.obstacles)+"\n")
+#     f.write("goal_pos="+str((int(env.goal_pos[0]),int(env.goal_pos[1])))+"\n")
+# env.add_agent(typeAgent='rl')
+# env.train(nb_i=1000)
+# env.agents[0].save_q_table()
+# env.start()
