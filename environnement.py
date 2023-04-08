@@ -88,8 +88,6 @@ class Env(gym.Env):
 		pygame.draw.rect(screen,(255,0,0),(self.goal_pos[0]*self.size_format,(self.size-self.goal_pos[1]-1)*self.size_format,self.size_format,self.size_format))
 
 
-
-
 		for i in range(len(self.agents)):
 			agent_x, agent_y = self.agents[i].pos
 			agent_x, agent_y = (self.size-agent_x-1)*self.size_format, agent_y*self.size_format
@@ -140,29 +138,23 @@ class Env(gym.Env):
 			stopped = self.quit()
 
 
+
 	def train(self, num_agent=0, nb_i=1000, immortal=False):
 		agent=self.agents[num_agent]
 		for _ in range(nb_i):
 			self.reset()
 			agent.pos=agent.origin
 			is_alive=True
-			#print(f" origin features: {agent.features}")
-			c=0
 			while not self.has_ended(is_alive): 
 				action=agent.move()
 				new_pos,reward, is_alive = self.step(agent, agent.pos, action)
 				if(is_alive):
 					agent.update(action, reward, new_pos)
-					agent.pos=new_pos
-					print(agent.pos,reward)
-					
+					agent.pos=new_pos					
 				else:
 					agent.update(action, reward, agent.pos)
 				if immortal:
 					is_alive=True
-				c+=1
-			print(agent.weights)
-			print(f"killed after {c} tries")
 
 
 	def reset(self):
@@ -174,21 +166,8 @@ class Env(gym.Env):
 	def step(self, agent, pos, action):
 		is_alive=True
 		new_pos=pos+self._action_to_direction[action]
-		if(type(agent) == LRLAgent):
-			features = agent.update_features(new_pos)
-			if torch.equal(new_pos,self.goal_pos): reward=float(torch.sum(features*torch.tensor((1,1,1))))*10
-			else: reward=float(torch.sum(features*torch.tensor((1,1,1))))
-			if not self._is_valid(new_pos):
-				is_alive=False
-		else:
-			if torch.equal(new_pos,self.goal_pos):
-				reward=1e3
-				is_alive=False
-			elif not self._is_valid(new_pos):
-				reward=-1
-				is_alive=False
-			else:
-				reward=0
+		reward = agent.reward(new_pos, self.goal_pos, (valid_move:=self._is_valid(new_pos)))
+		is_alive=valid_move
 		return new_pos, reward, is_alive
 	
 	def gen_maze(self,pos=(0,0)):
