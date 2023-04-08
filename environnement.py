@@ -10,11 +10,11 @@ from agent import LRLAgent
 
 class Env(gym.Env):
     def __init__(self,
-                 size=10,
-                 timeout=1000,
-                 rendering='visual',
-                 goal_pos=(9, 9),
-                 obstacles=[]):
+                 size: int = 10,
+                 timeout: int = 1000,
+                 rendering: str = 'visual',
+                 goal_pos: tuple = (9, 9),
+                 obstacles: list = []) -> None:
         self.size = size
         self.timeout = timeout
         self.obstacles = obstacles
@@ -44,7 +44,7 @@ class Env(gym.Env):
                                  gamma,
                                  epsilon))
 
-    def has_ended(self, is_alive=True):
+    def has_ended(self, is_alive: bool = True) -> bool:
         if self.time > self.timeout or not is_alive:
             return True
         for agent in self.agents:
@@ -52,7 +52,7 @@ class Env(gym.Env):
                 return True
         return False
 
-    def setup_visual(self):
+    def setup_visual(self) -> None:
         # REQUIRED FOR THE RENDER VISUAL
         pygame.init()
         self.x, self.y = 500, 500  # static pixels size for the window
@@ -87,7 +87,7 @@ class Env(gym.Env):
                     path.join('__pycache__',
                               str(i)+'_robot.png')))
 
-    def render_visual(self, refresh):
+    def render_visual(self, refresh: float) -> None:
         screen = pygame.display.set_mode((self.x, self.y))
         screen.fill((255, 255, 255))
         for i in range(self.size+1):
@@ -121,7 +121,7 @@ class Env(gym.Env):
         pygame.display.update()
         sleep(refresh)
 
-    def render_tty(self, refresh):
+    def render_tty(self, refresh: float) -> None:
         s = ''
         for i in range(self.size-1, -1, -1):
             for j in range(0, self.size):
@@ -142,13 +142,13 @@ class Env(gym.Env):
         sleep(refresh)
         print(s)
 
-    def render(self, refresh=.5):
+    def render(self, refresh: float = .5) -> None:
         if self.rendering == 'visual':
             self.render_visual(refresh)
         elif self.rendering == 'tty':
             self.render_tty(refresh)
 
-    def start(self):
+    def start(self) -> None:
         self.reset()
         for agent in self.agents:
             agent.pos = agent.origin
@@ -163,7 +163,10 @@ class Env(gym.Env):
             self.render()
             stopped = self.quit()
 
-    def train(self, num_agent=0, nb_i=1000, immortal=False):
+    def train(self,
+              num_agent: int = 0,
+              nb_i: int = 1000,
+              immortal: bool = False) -> None:
         agent = self.agents[num_agent]
         for _ in range(nb_i):
             self.reset()
@@ -180,15 +183,15 @@ class Env(gym.Env):
                 if immortal:
                     is_alive = True
 
-    def reset(self):
+    def reset(self) -> None:
         self.time = 0
 
-    def _is_valid(self, pos):
+    def _is_valid(self, pos: torch.Tensor) -> bool:
         return ((pos[0] >= 0 and pos[0] < self.size) and
                 (pos[1] >= 0 and pos[1] < self.size)) and \
                  (tuple(pos) not in self.obstacles)
 
-    def step(self, agent, pos, action):
+    def step(self, agent, pos: torch.Tensor, action: int) -> tuple:
         is_alive = True
         new_pos = pos + self._action_to_direction[action]
         reward = agent.reward(new_pos,
@@ -197,7 +200,7 @@ class Env(gym.Env):
         is_alive = valid_move
         return new_pos, reward, is_alive
 
-    def gen_maze(self, pos=(0, 0)):
+    def gen_maze(self, pos: tuple = (0, 0)) -> None:
         maze = torch.ones(self.size+1, self.size+1)
         search = [(pos[0]+1, pos[1]+1)]
         path = set()
@@ -234,7 +237,7 @@ class Env(gym.Env):
                           for j in range(1, self.size+1) if maze[i, j] == 1]
         self.goal_pos = torch.tensor((goal_pos[0]-1, goal_pos[1]-1))
 
-    def quit(self):
+    def quit(self) -> bool:
         if self.rendering == 'visual':
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
